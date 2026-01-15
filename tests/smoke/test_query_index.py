@@ -1,5 +1,12 @@
 import requests
 def test_query_index_list(base_url):
+    """
+        Smoke Test: Verify the Book Table of Contents (Index) API.
+
+        Validates that the system can retrieve the chapter list for a specific book.
+        This is a critical path for the reading experience; if this fails,
+        users cannot access book content.
+    """
     param={"bookId":2010824442059300864}
     resp = requests.get(base_url+"/book/queryIndexList", params=param,allow_redirects=False)
     assert resp.status_code == 200

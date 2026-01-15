@@ -1,5 +1,12 @@
 import requests
 def test_list_rank(base_url):
+    """
+        Smoke Test: Verify the Book Ranking List API.
+
+        This test checks the system's ability to retrieve ranking data
+        (e.g., 1 for Top Clicked, 2 forTop New Books) which is essential for the homepage.
+
+    """
     param={"type":1}
     resp=requests.get(base_url+"/book/listRank",params=param,allow_redirects=False)
     assert resp.status_code == 200

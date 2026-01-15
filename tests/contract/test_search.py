@@ -1,11 +1,34 @@
 import requests
+from jsonschema import validate
+from tests.schemas.common import BASE_RESPONSE_SCHEMA
+from tests.schemas.pagination import pagination_schema
+from tests.schemas.book import BOOK_ITEM_SCHEMA
+
 def test_search_by_page(base_url):
+    """
+        Test Case: Verify Book Search Pagination Contract.
+
+        Validation Logic:
+        1. Global response format (standard wrapper).
+        2. Pagination metadata (pageNum, pageSize, total, etc.).
+        3. Business entity data within the list (BOOK_ITEM_SCHEMA).
+    """
+
     param = {"curr": 1, "limit": 20, "keyword": "roman"}
     resp = requests.get(base_url + "/book/searchByPage", params=param, allow_redirects=False)
     assert resp.status_code == 200
     assert "application/json" in resp.headers.get("Content-Type", "")
 
     body = resp.json()
+    # Structural Validation level 1
+    validate(instance=body,schema=BASE_RESPONSE_SCHEMA)
+    assert body["ok"] is True and body["code"] == 200
+    # Structural Validation level 2
+    # The pagination_schema() wraps BOOK_ITEM_SCHEMA to validate each item in the 'list' array.
+    validate(instance=body["data"],schema=pagination_schema(BOOK_ITEM_SCHEMA))
+
+
+    '''
     assert isinstance(body, dict)
     assert body.get("ok") is True
     assert body.get("code") == 200
@@ -31,3 +54,5 @@ def test_search_by_page(base_url):
         assert "id" in first
         assert "bookName" in first
         assert "authorName" in first
+        
+        '''
