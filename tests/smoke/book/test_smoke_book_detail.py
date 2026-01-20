@@ -1,4 +1,7 @@
 import requests
+import pytest
+
+pytestmark = pytest.mark.smoke
 def test_query_book_detail(base_url):
     """
         Smoke Test: Verify core availability of the Book Detail endpoint.

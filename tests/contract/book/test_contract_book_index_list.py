@@ -1,9 +1,11 @@
 import requests
 from jsonschema import validate
-from tests.schemas.common import BASE_RESPONSE_SCHEMA
-from tests.schemas.pagination import pagination_schema
-from tests.schemas.index import BOOK_INDEX_SCHEMA
-def test_query_index_list(base_url):
+from schemas.endpoints.book.query_index_response import QUERY_INDEX_LIST_RESPONSE_SCHEMA
+import pytest
+
+pytestmark = pytest.mark.contract
+
+def test_contract_query_index_list_schema(base_url):
     """
         Test Case: Verify Book Chapter Index Pagination & Contract.
 
@@ -16,6 +18,5 @@ def test_query_index_list(base_url):
     assert resp.status_code == 200
     assert "application/json" in resp.headers.get("Content-Type", "")
     body = resp.json()
-    validate(instance=body,schema=BASE_RESPONSE_SCHEMA)
+    validate(instance=body, schema=QUERY_INDEX_LIST_RESPONSE_SCHEMA)
     assert body["ok"] is True and body["code"] == 200
-    validate(instance=body["data"],schema=pagination_schema(BOOK_INDEX_SCHEMA))

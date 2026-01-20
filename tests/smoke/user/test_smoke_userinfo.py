@@ -1,5 +1,7 @@
 import requests
+import pytest
 
+pytestmark = pytest.mark.smoke
 
 def test_userinfo(auth_http,base_url):
     """
@@ -8,9 +10,7 @@ def test_userinfo(auth_http,base_url):
         This test ensures that the Authorization header is correctly processed
         and the backend returns the personal profile data for the logged-in user.
     """
-
-    headers={"Authorization":auth_http}
-    resp=requests.get(base_url+"/user/userInfo",headers=headers,allow_redirects=False)
+    resp=auth_http.get(base_url+"/user/userInfo",allow_redirects=False)
 
     assert resp.status_code == 200
     assert "application/json" in resp.headers.get("content-type","")
@@ -19,7 +19,7 @@ def test_userinfo(auth_http,base_url):
     assert body.get("data")is not None
 
 
-def test_userinfo_login_required(auth_http,base_url):
+def test_userinfo_login_required(base_url):
     """
         Smoke Test (Security): Verify that unauthorized access is blocked.
 

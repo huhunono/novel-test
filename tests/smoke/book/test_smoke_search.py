@@ -1,5 +1,7 @@
 import requests
+import pytest
 
+pytestmark = pytest.mark.smoke
 def test_search_by_page(base_url):
     """
         Smoke Test: Verify the Book Search & Pagination API.

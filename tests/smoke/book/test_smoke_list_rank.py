@@ -1,4 +1,7 @@
 import requests
+import pytest
+
+pytestmark = pytest.mark.smoke
 def test_list_rank(base_url):
     """
         Smoke Test: Verify the Book Ranking List API.

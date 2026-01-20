@@ -1,4 +1,7 @@
 import requests
+import pytest
+
+pytestmark = pytest.mark.smoke
 def test_query_index_list(base_url):
     """
         Smoke Test: Verify the Book Table of Contents (Index) API.

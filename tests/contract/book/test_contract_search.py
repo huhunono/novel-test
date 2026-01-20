@@ -1,10 +1,11 @@
 import requests
 from jsonschema import validate
-from tests.schemas.common import BASE_RESPONSE_SCHEMA
-from tests.schemas.pagination import pagination_schema
-from tests.schemas.book import BOOK_ITEM_SCHEMA
+from schemas.endpoints.book.search_response import SEARCH_BOOK_RESPONSE_SCHEMA
+import pytest
 
-def test_search_by_page(base_url):
+pytestmark = pytest.mark.contract
+
+def test_contract_search_by_page_schema(base_url):
     """
         Test Case: Verify Book Search Pagination Contract.
 
@@ -20,12 +21,10 @@ def test_search_by_page(base_url):
     assert "application/json" in resp.headers.get("Content-Type", "")
 
     body = resp.json()
-    # Structural Validation level 1
-    validate(instance=body,schema=BASE_RESPONSE_SCHEMA)
+
+    validate(instance=body,schema=SEARCH_BOOK_RESPONSE_SCHEMA)
     assert body["ok"] is True and body["code"] == 200
-    # Structural Validation level 2
-    # The pagination_schema() wraps BOOK_ITEM_SCHEMA to validate each item in the 'list' array.
-    validate(instance=body["data"],schema=pagination_schema(BOOK_ITEM_SCHEMA))
+
 
 
     '''

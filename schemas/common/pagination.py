@@ -2,7 +2,7 @@
 Pagination Schema Module
 Provides a reusable factory function for paged data validation.
 """
-from tests.schemas.common import is_int_like_Schema
+from schemas.common.primitives import is_int_like_Schema
 def pagination_schema(item_schema):
     """
         Generates a schema for paginated data objects.

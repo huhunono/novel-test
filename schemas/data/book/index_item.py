@@ -1,8 +1,8 @@
 """
-Schema for a single chapter/index entry within a book's table of contents.
-Used primarily for validating chapter lists and navigation menus.
+Book-related schemas for API contract validation.
+Defines structures for both summary list items and detailed book information.
 """
-from tests.schemas.common import is_int_like_Schema
+from schemas.common.primitives import is_int_like_Schema
 BOOK_INDEX_SCHEMA = {
     "title": "Book Index Item",
     "description": "Represents metadata for an individual chapter or volume index.",
@@ -28,4 +28,3 @@ BOOK_INDEX_SCHEMA = {
     },
     "additionalProperties": True,
 }
-
