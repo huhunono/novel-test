@@ -8,11 +8,11 @@ USERINFO_DATA_SCHEMA = {
         "id": {"type": ["integer", "null"]},
         "username": {
             "title": "user username",
-            "Type": "string"
+            "type": "string"
         },
         "nickName": {
             "title": "user nickName",
-            "Type": "string"
+            "type": "string"
         },
         "accountBalance": {
             "title": "user accountBalance",

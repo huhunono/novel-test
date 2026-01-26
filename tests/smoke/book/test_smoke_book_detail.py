@@ -1,8 +1,8 @@
 import requests
 import pytest
-
+from tests.utils.assertions import assert_json_response
 pytestmark = pytest.mark.smoke
-def test_query_book_detail(base_url):
+def test_query_book_detail(base_url,plain_http):
     """
         Smoke Test: Verify core availability of the Book Detail endpoint.
 
@@ -12,20 +12,10 @@ def test_query_book_detail(base_url):
     """
 
     book_id=2010824442059300864
-    resp = requests.get(
-        f"{base_url}/book/queryBookDetail/{book_id}", allow_redirects=False
+    resp = plain_http.get(
+        f"{base_url}/book/queryBookDetail/{book_id}", allow_redirects=False,timeout=10
     )
-    # Assertion 1: Check HTTP Status Code
-    assert resp.status_code == 200
-
-    # Assertion 2: Strict Content-Type check with detailed error reporting.
-    ct = resp.headers.get("content-type", "")
-    if "application/json" not in ct:
-        raise AssertionError(
-            "Content type is not application/json.\n"f"url:{resp.request.url}\n"f"status:{resp.status_code}\n"
-            f"ct:{ct}\n"
-            f"text:{resp.text[:300]}\n")
-    body = resp.json()
+    body = assert_json_response(resp)
 
 
     # Assertion 3: Verify basic business success markers (Envelope Level)

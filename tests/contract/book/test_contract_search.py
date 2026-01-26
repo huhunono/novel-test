@@ -2,10 +2,11 @@ import requests
 from jsonschema import validate
 from schemas.endpoints.book.search_response import SEARCH_BOOK_RESPONSE_SCHEMA
 import pytest
+from tests.utils.assertions import assert_json_response
 
 pytestmark = pytest.mark.contract
 
-def test_contract_search_by_page_schema(base_url):
+def test_contract_search_by_page_schema(base_url,plain_http):
     """
         Test Case: Verify Book Search Pagination Contract.
 
@@ -16,11 +17,8 @@ def test_contract_search_by_page_schema(base_url):
     """
 
     param = {"curr": 1, "limit": 20, "keyword": "roman"}
-    resp = requests.get(base_url + "/book/searchByPage", params=param, allow_redirects=False)
-    assert resp.status_code == 200
-    assert "application/json" in resp.headers.get("Content-Type", "")
-
-    body = resp.json()
+    resp = plain_http.get(base_url + "/book/searchByPage", params=param, allow_redirects=False,timeout=10)
+    body = assert_json_response(resp)
 
     validate(instance=body,schema=SEARCH_BOOK_RESPONSE_SCHEMA)
     assert body["ok"] is True and body["code"] == 200

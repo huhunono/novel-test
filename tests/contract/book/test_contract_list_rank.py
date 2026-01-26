@@ -2,10 +2,11 @@ import requests
 from jsonschema import validate
 from schemas.endpoints.book.list_rank_response import BOOK_RANK_ITEM_SCHEMA
 import pytest
+from tests.utils.assertions import assert_json_response
 
 pytestmark = pytest.mark.contract
 
-def test_contract_list_rank_schema(base_url):
+def test_contract_list_rank_schema(base_url,plain_http):
     """
         Test Case: Verify Book Ranking List Contract.
 
@@ -15,9 +16,7 @@ def test_contract_list_rank_schema(base_url):
         3. Book ranking list structure and item metadata consistency (matches BOOK_RANK_ITEM_SCHEMA).
     """
     param={"type":1}
-    resp=requests.get(base_url+"/book/listRank",params=param,allow_redirects=False)
-    assert resp.status_code == 200
-    assert "application/json" in resp.headers.get("Content-Type", "")
-    body = resp.json()
+    resp=plain_http.get(base_url+"/book/listRank",params=param,allow_redirects=False,timeout=10)
+    body = assert_json_response(resp)
     validate(instance=body, schema=BOOK_RANK_ITEM_SCHEMA)
     assert body["ok"] is True and body["code"] == 200

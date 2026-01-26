@@ -1,10 +1,10 @@
 import requests
 import pytest
-
+from tests.utils.assertions import assert_json_response
 pytestmark = pytest.mark.smoke
 
 
-def test_login_success(base_url):
+def test_login_success(base_url,plain_http):
     """
         Smoke Test: Verify Successful Authentication.
 
@@ -16,9 +16,7 @@ def test_login_success(base_url):
         "username": "13560421999",
         "password": "123456"
     }
-    resp = requests.post(base_url +"/user/login", data=login_data, allow_redirects=False)
-    assert resp.status_code == 200
-    assert "application/json" in resp.headers.get("content-type","")
-    body=resp.json()
+    resp = plain_http.post(base_url +"/user/login", data=login_data, allow_redirects=False,timeout=10)
+    body = assert_json_response(resp)
     assert body.get("ok") is True
     assert body.get("data")is not None

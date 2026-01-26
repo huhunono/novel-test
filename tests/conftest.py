@@ -7,11 +7,8 @@ def http():
 
 
 @pytest.fixture(scope="session")
-def auth_token():
-    base_url = "http://172.28.0.1:8083"
-    session = requests.Session()
-
-    resp = session.post(
+def auth_token(base_url):
+    resp = requests.post(
         base_url + "/user/login",
         #Form parsing
         data={
@@ -44,9 +41,14 @@ def auth_token():
 def base_url():
     return "http://172.28.0.1:8083"
 
-@pytest.fixture(scope="session")
-def auth_http(http, auth_token):
-    http.headers.update({
+@pytest.fixture()
+def auth_http(auth_token):
+    s = requests.Session()
+    s.headers.update({
         "Authorization": auth_token
     })
-    return http
+    return s
+
+@pytest.fixture()
+def plain_http():
+    return requests.Session()

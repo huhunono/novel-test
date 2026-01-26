@@ -2,11 +2,12 @@ import requests
 from jsonschema import validate
 from schemas.endpoints.book.book_detail_response import QUERY_BOOK_DETAIL_RESPONSE_SCHEMA
 import pytest
+from tests.utils.assertions import assert_json_response
 
 pytestmark = pytest.mark.contract
 
 
-def test_contract_query_index_list_schema(base_url):
+def test_contract_query_index_list_schema(base_url,plain_http):
     """
         Test Case: Verify Book Detail API Contract.
 
@@ -16,11 +17,9 @@ def test_contract_query_index_list_schema(base_url):
         """
 
     book_id = 2010824442059300864
-    resp = requests.get(
-        f"{base_url}/book/queryBookDetail/{book_id}", allow_redirects=False
+    resp = plain_http.get(
+        f"{base_url}/book/queryBookDetail/{book_id}", allow_redirects=False,timeout=10
     )
-    assert resp.status_code == 200
-    assert "application/json" in resp.headers.get("Content-Type", "")
-    body = resp.json()
+    body = assert_json_response(resp)
     validate(instance=body, schema=QUERY_BOOK_DETAIL_RESPONSE_SCHEMA)
     assert body["ok"]is True and body["code"]==200
