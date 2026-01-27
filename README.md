@@ -103,6 +103,35 @@ and **cross-API consistency**, rather than field-level assertions.
 → `removeFromBookShelf`
 → `queryIsInShelf == false`
 
+#### Bookshelf Idempotency Rule (Regression Invariant)
+
+- `addToBookShelf` (first call)
+→ `addToBookShelf` (duplicate call)
+→ `listBookShelfByPage` contains the book **only once** (no duplicates)
+
+Covered Tests:
+- `test_reg_addToBookShelf_idempotent_should_not_duplicate`
+
+
+#### Bookshelf Cross-API Consistency (Known Issue)
+
+- Scenario:
+  - `addToBookShelf` with a **non-existent bookId`
+  - `queryIsInShelf` returns `true`
+  - `listBookShelfByPage` does **not** display the book
+
+- Expected Invariant:
+  - If `queryIsInShelf == true`,
+    the book should be visible in `listBookShelfByPage`
+  - **OR**
+    `addToBookShelf` should reject non-existent `bookId`
+
+- Current Behavior:
+  - Inconsistent contract across APIs (known issue)
+
+Covered Tests:
+- `test_reg_bookshelf_consistency_nonexistent_bookId_query_true_but_not_in_list` *(xfail)*
+
 #### Book Data Consistency
 - `searchByPage → queryBookDetail(bookId)`
 - `queryBookDetail(bookId) → queryIndexList(bookId)`
@@ -118,43 +147,62 @@ and **cross-API consistency**, rather than field-level assertions.
 
 ### A. Equivalence Partitioning (Data Validity)
 
-**test_reg_queryBookDetail_nonexistent_bookId_should_fail**
-- Logic: Use a valid-format but non-existent `bookId` (e.g., `999999`).
-- Expectation:
-  - HTTP 404  
-  - or HTTP 200 with `code != 200` indicating "Resource not found".
+#### 1) GET /book/queryBookDetail/{bookId}
+- **Valid & Exists**
+  - Covered by scenario-based tests (happy path).
 
-**test_reg_addToBookShelf_invalid_bookId_should_be_rejected**
-- Logic: Submit an invalid `bookId` (negative value or non-numeric string).
-- Expectation:
-  - Business rejection (`ok == false` / `code != 200`)
-  - or HTTP 400.
+- **Valid but Non-existent**
+  - Expected: JSON error response (HTTP 404 or `code != 200`).
+  - Current behavior: returns HTML "Not Found" page (contract violation).
+
+- **Invalid Format**
+  - Expected: JSON validation error (HTTP 400 or `code != 200`).
+  - Current behavior: returns HTML error page (contract violation).
+
+
 
 ---
 
 ### B. Boundary Value Analysis (Pagination)
 
-**test_reg_searchByPage_pageNum_zero_should_be_rejected**
-- Logic: Request `pageNum = 0`.
-- Expectation:
-  - API returns a controlled error
-  - or defaults to a valid page number instead of crashing.
+Applied to pagination APIs, which are common sources of off-by-one errors.
 
-**test_reg_searchByPage_pageSize_minimum_should_pass**
-- Logic: Request `pageSize = 1`.
-- Expectation:
-  - API returns exactly one item
-  - Pagination metadata remains consistent.
+#### GET /book/searchByPage
+
+- **pageNum = 0** (invalid lower boundary)
+  - Expected: rejected (4xx / `ok=false`) or corrected to `pageNum >= 1` (no 5xx).
+  - Actual: returns **HTTP 200 + ok=true** with `pageNum="0"` and empty list.
+  - Status: flagged by regression test as a boundary defect  
+    (`test_reg_searchByPage_pageNum_zero_should_be_rejected_or_corrected`).
+
+- **pageNum = 2** (valid just-inside value)
+  - Expected: handled normally; empty list is acceptable when `pageNum > pages`.
+  - Actual: returns **HTTP 200 + ok=true** with `pageNum="2"` and empty list (passes).
+  - Status: covered by regression test  
+    (`test_reg_searchByPage_pageNum_two_should_return_empty_or_valid_result`).
+
+- **pageNum = 1** (default valid)
+  - Covered by scenario-based regression flow tests (happy path), no duplication here.
+
+- **pageSize = 1** (minimum valid boundary)
+  - Expected: succeeds; result list size `<= 1`; pagination metadata remains consistent.
+  - Actual: succeeds and meets expectations.
+  - Status: covered by regression test  
+    (`test_reg_searchByPage_pageSize_one_should_return_at_most_one_item`).
+
+
 
 ---
 
 ### C. Error Guessing (Security & Missing Params)
 
-**test_reg_userInfo_missing_auth_should_be_rejected**
-- Logic: Call a protected user endpoint without authentication token.
-- Expectation:
-  - HTTP 401 Unauthorized
-  - or equivalent authorization failure response.
+Error guessing tests are designed based on experience with similar systems,
+focusing on high-risk failure scenarios that are easy to overlook but critical
+to system correctness and security.
+
+- **login invalid password**
+  - Scenario: submit valid username with incorrect password.
+  - Expected: authentication fails gracefully (`ok=false` / `code!=200`), no token returne
   
 ---
 ## 6. Out-of-Scope APIs
