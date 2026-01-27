@@ -21,10 +21,10 @@ used by QA / SDET teams, rather than exhaustive endpoint coverage.
 ## 2. Testing Layers Overview
 
 | Layer      | Purpose                               | Characteristics |
-|-----------|----------------------------------------|----------------|
-| Smoke     | Service availability check             | Fast, read-only, minimal assertions |
-| Contract  | API response structure validation      | Schema-based, P0 endpoints only |
-| Regression| Business behavior, validation & state invariants  | Cross-API flows, negative paths, boundary conditions |
+|-----------|---------------------------------------|----------------|
+| Smoke     | Service availability check            | Fast, read-only, minimal assertions |
+| Contract  | API response structure validation     | Schema-based, P0 endpoints only |
+| Regression| Business behavior & state invariants  | Cross-API flows, negative paths, boundary conditions |
 
 ---
 
@@ -90,6 +90,16 @@ These tests ensure:
 Regression tests focus on **business-critical flows**
 and **cross-API consistency**, rather than field-level assertions.
 
+Failure regression tests target **high-risk and high-frequency error paths**, instead of enumerating all possible invalid combinations.
+
+Regression tests are designed using:
+- Scenario-based testing
+- Equivalence partitioning
+- Boundary value analysis
+- Error guessing based on common production risks
+
+---
+
 ### 5.1 Happy Path (Core Business Flows with Scenario-Based Testing)
 
 #### Authentication
@@ -114,91 +124,73 @@ Covered Tests:
 
 
 #### Bookshelf Cross-API Consistency (Known Issue)
+Scenario:
+- `addToBookShelf` with a **non-existent bookId**
+- `queryIsInShelf` returns `true`
+- `listBookShelfByPage` does not display the book
 
-- Scenario:
-  - `addToBookShelf` with a **non-existent bookId`
-  - `queryIsInShelf` returns `true`
-  - `listBookShelfByPage` does **not** display the book
+Expected invariant:
+- If `queryIsInShelf == true`, the book must appear in `listBookShelfByPage`
+  **OR**
+- `addToBookShelf` should reject a non-existent `bookId`
 
-- Expected Invariant:
-  - If `queryIsInShelf == true`,
-    the book should be visible in `listBookShelfByPage`
-  - **OR**
-    `addToBookShelf` should reject non-existent `bookId`
-
-- Current Behavior:
-  - Inconsistent contract across APIs (known issue)
-
-Covered Tests:
-- `test_reg_bookshelf_consistency_nonexistent_bookId_query_true_but_not_in_list` *(xfail)*
+Covered test:
+- `test_reg_bookshelf_consistency_nonexistent_bookId_query_true_but_not_in_list` (`xfail`)
 
 #### Book Data Consistency
-- `searchByPage → queryBookDetail(bookId)`
-- `queryBookDetail(bookId) → queryIndexList(bookId)`
-  (all items reference the same bookId)
+- `searchByPage` → `queryBookDetail(bookId)`
+- `queryBookDetail(bookId)` → `queryIndexList(bookId)`
+- All items reference the same `bookId`
 
 #### Comment Flow
-- `addBookComment (unique content)`
-→ `listCommentByPage` contains new comment
+- `addBookComment` (unique content)
+- `listCommentByPage` contains the new comment
 
 ---
+
+
 
 ### 5.2 Negative Path (Validation, Boundary, Security)
 
-### A. Equivalence Partitioning (Data Validity)
+#### A. Equivalence Partitioning (Data Validity)
 
-#### 1) GET /book/queryBookDetail/{bookId}
-- **Valid & Exists**
-  - Covered by scenario-based tests (happy path).
+**Endpoint:** `GET /book/queryBookDetail/{bookId}`
 
-- **Valid but Non-existent**
-  - Expected: JSON error response (HTTP 404 or `code != 200`).
-  - Current behavior: returns HTML "Not Found" page (contract violation).
+- Valid & exists  
+  Covered by scenario-based regression tests.
 
-- **Invalid Format**
-  - Expected: JSON validation error (HTTP 400 or `code != 200`).
-  - Current behavior: returns HTML error page (contract violation).
+- Valid but non-existent  
+  Expected: JSON error response (`HTTP 404` or `code != 200`).
 
+- Invalid format (e.g. `-1`, `"abc"`)  
+  Expected: JSON validation error (`HTTP 400` or `code != 200`).
 
+> Note: Observed deviations from these expectations are documented in **Known Issues**.
 
 ---
 
-### B. Boundary Value Analysis (Pagination)
+#### B. Boundary Value Analysis (Pagination)
 
-Applied to pagination APIs, which are common sources of off-by-one errors.
+**Endpoint:** `GET /book/searchByPage`
 
-#### GET /book/searchByPage
+- `pageNum = 0` (invalid lower boundary)  
+  Expected: rejected or normalized to `pageNum >= 1` (no `5xx`).
 
-- **pageNum = 0** (invalid lower boundary)
-  - Expected: rejected (4xx / `ok=false`) or corrected to `pageNum >= 1` (no 5xx).
-  - Actual: returns **HTTP 200 + ok=true** with `pageNum="0"` and empty list.
-  - Status: flagged by regression test as a boundary defect  
-    (`test_reg_searchByPage_pageNum_zero_should_be_rejected_or_corrected`).
+- `pageNum = 2` (valid just-inside value)  
+  Expected: handled normally; empty list acceptable.
 
-- **pageNum = 2** (valid just-inside value)
-  - Expected: handled normally; empty list is acceptable when `pageNum > pages`.
-  - Actual: returns **HTTP 200 + ok=true** with `pageNum="2"` and empty list (passes).
-  - Status: covered by regression test  
-    (`test_reg_searchByPage_pageNum_two_should_return_empty_or_valid_result`).
+- `pageNum = 1` (default valid)  
+  Covered by happy-path regression flows.
 
-- **pageNum = 1** (default valid)
-  - Covered by scenario-based regression flow tests (happy path), no duplication here.
-
-- **pageSize = 1** (minimum valid boundary)
-  - Expected: succeeds; result list size `<= 1`; pagination metadata remains consistent.
-  - Actual: succeeds and meets expectations.
-  - Status: covered by regression test  
-    (`test_reg_searchByPage_pageSize_one_should_return_at_most_one_item`).
-
-
+- `pageSize = 1` (minimum valid boundary)  
+  Expected: success; result size ≤ 1; pagination metadata consistent.
 
 ---
 
 ### C. Error Guessing (Security & Missing Params)
 
-Error guessing tests are designed based on experience with similar systems,
-focusing on high-risk failure scenarios that are easy to overlook but critical
-to system correctness and security.
+Based on experience with similar systems, error-guessing tests focus on **high-risk but
+commonly overlooked scenarios**.
 
 - **login invalid password**
   - Scenario: submit valid username with incorrect password.
@@ -220,8 +212,43 @@ The following APIs are intentionally excluded from regression testing:
 Optional mock-based payment tests may be added in a separate suite.
 
 ---
+## 7. Known Issues & Observed Contract Deviations
 
-## 7. Test Execution
+The following behaviors are **observed during regression testing**.  
+They are explicitly marked using `pytest.xfail` to preserve test intent while keeping CI results stable.
+
+### 1) Non-existent Book ID Error Handling
+- **Endpoint:** `GET /book/queryBookDetail/{bookId}`
+- **Observed Behavior:** Returns an HTML "Not Found" page
+- **Impact:** API contract violation for JSON consumers
+- **Status:** `xfail`
+
+### 2) Invalid `bookId` Parameter Handling
+- **Endpoint:** `GET /book/queryBookDetail/{bookId}`
+- **Inputs:** `-1`, `"abc"`
+- **Observed Behavior:** HTML error response
+- **Impact:** Contract inconsistency
+- **Status:** `xfail`
+
+### 3) Pagination Boundary Handling (`pageNum = 0`)
+- **Endpoint:** `GET /book/searchByPage`
+- **Observed Behavior:** Accepted as valid, returns empty list with `ok=true`
+- **Impact:** Boundary rule violation
+- **Status:** `xfail`
+
+### 4) Bookshelf Cross-API Consistency with Non-existent `bookId`
+- **Observed Behavior:**  
+  `queryIsInShelf == true` but `listBookShelfByPage` does not include the book
+- **Impact:** Business contract inconsistency
+- **Status:** `xfail`
+
+### 5) Token Refresh Behavior (Observed Contract)
+- **Behavior:** `/user/refreshToken` issues a new token without revoking previously issued tokens
+- **Note:** Old tokens remain valid until natural expiration
+- **Impact:** Documented authentication contract (not a test failure)
+
+---
+## 8. Test Execution
 
 ```bash
 # Run smoke tests

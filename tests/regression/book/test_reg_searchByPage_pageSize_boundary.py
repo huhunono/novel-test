@@ -3,7 +3,7 @@ from tests.utils.assertions import assert_json_response,assert_ok_true
 
 pytestmark = pytest.mark.regression
 
-# ---------------------- BVA 1: pageSize = 0 ----------------------
+# ---------------------- BVA 1: pageSize = 1 ----------------------
 def test_reg_searchByPage_pageSize_one_should_return_at_most_one_item(base_url, plain_http):
     """
         Regression Test: Verify Pagination Boundary for Minimal Page Size.
