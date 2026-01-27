@@ -24,7 +24,7 @@ used by QA / SDET teams, rather than exhaustive endpoint coverage.
 |-----------|----------------------------------------|----------------|
 | Smoke     | Service availability check             | Fast, read-only, minimal assertions |
 | Contract  | API response structure validation      | Schema-based, P0 endpoints only |
-| Regression| Business behavior & state consistency  | Cross-API, state-changing flows |
+| Regression| Business behavior, validation & state invariants  | Cross-API flows, negative paths, boundary conditions |
 
 ---
 

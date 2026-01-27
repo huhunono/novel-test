@@ -5,6 +5,16 @@ pytestmark = pytest.mark.regression
 
 # ---------------------- BVA 1: pageSize = 0 ----------------------
 def test_reg_searchByPage_pageSize_one_should_return_at_most_one_item(base_url, plain_http):
+    """
+        Regression Test: Verify Pagination Boundary for Minimal Page Size.
+
+        Logic Flow: searchByPage?limit=1
+
+        This test ensures the backend respects the limit constraint at its lowest boundary:
+        1. Limit Enforcement: Validates that the persistence layer (SQL LIMIT 1) correctly restricts the result set.
+        2. Data Integrity: Verifies the 'pageSize' metadata in the response matches the requested parameter.
+        3. Resource Optimization: Ensures the API does not over-fetch data, protecting downstream consumers from bulk payloads.
+    """
     params = {"limit":"1"}
     resp =plain_http.get(base_url + "/book/searchByPage", params=params, allow_redirects=False,timeout=10)
 
