@@ -8,6 +8,9 @@ The test suite is designed to reflect **real-world automation practices**
 used by QA / SDET teams, rather than exhaustive endpoint coverage.
 
 ---
+## Test Reporting (Allure)
+![Allure Report Overview](docs/images/allure-overview.png)
+---
 
 ## 1. Testing Goals
 
