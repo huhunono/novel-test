@@ -9,7 +9,7 @@ used by QA / SDET teams, rather than exhaustive endpoint coverage.
 
 ---
 ## Test Reporting (Allure)
-![Allure Report Overview](docs/images/allure-overview.png)
+![Allure Report Overview](docs/images/allure_overview.png)
 ---
 
 ## 1. Testing Goals
