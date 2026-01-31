@@ -9,7 +9,7 @@ used by QA / SDET teams, rather than exhaustive endpoint coverage.
 
 ---
 ## Test Reporting (Allure)
-![Allure Report Overview](docs/images/allure_overview.png)
+![Allure Report Overview](docs/images/allure1-30.png)
 ---
 
 ## 1. Testing Goals
@@ -87,8 +87,40 @@ These tests ensure:
 - Pagination structures do not break consumers
 
 ---
+## 5. CI Regression Suite (Fast, Deterministic, P0 Coverage)
 
-## 5. Regression Test Plan 
+The **CI Regression suite** is a **minimal, deterministic subset of regression tests**
+designed to run on **every CI execution**.
+
+Its purpose is to:
+- Validate **P0 business-critical paths**
+- Catch **high-impact regressions early**
+- Remain **fast, stable, and environment-safe**
+
+This suite intentionally avoids:
+- Large data setup
+- Non-deterministic dependencies
+- Full combinatorial coverage
+
+---
+
+### CI Regression Coverage
+
+The following tests validate **core system health** and **critical user flows**:
+
+- **`test_book_category_ci`** — Book category API availability and basic data sanity.
+- **`test_book_detail_ci`** — Book detail retrieval and identity consistency by `bookId`.
+- **`test_book_index_list_ci`** — Chapter index list accessibility and structure integrity.
+- **`test_book_rank_ci`** — Ranking list availability for discovery flows.
+- **`test_index_news_ci`** — Homepage news feed availability and display readiness.
+- **`test_user_login_ci`** — Authentication and token usability for authorized APIs.
+- **`test_user_bookshelf_ci`** — Bookshelf lifecycle state consistency  
+  *(Add → Query True → Remove → Query False)*.
+
+
+---
+
+## 6. Regression Test Plan 
 
 Regression tests focus on **business-critical flows**
 and **cross-API consistency**, rather than field-level assertions.
@@ -103,7 +135,7 @@ Regression tests are designed using:
 
 ---
 
-### 5.1 Happy Path (Core Business Flows with Scenario-Based Testing)
+### 6.1 Happy Path (Core Business Flows with Scenario-Based Testing)
 
 #### Authentication
 - `login → userInfo` (token validity)
@@ -153,7 +185,7 @@ Covered test:
 
 
 
-### 5.2 Negative Path (Validation, Boundary, Security)
+### 6.2 Negative Path (Validation, Boundary, Security)
 
 #### A. Equivalence Partitioning (Data Validity)
 
@@ -200,7 +232,7 @@ commonly overlooked scenarios**.
   - Expected: authentication fails gracefully (`ok=false` / `code!=200`), no token returne
   
 ---
-## 6. Out-of-Scope APIs
+## 7. Out-of-Scope APIs
 
 The following APIs are intentionally excluded from regression testing:
 
@@ -215,7 +247,7 @@ The following APIs are intentionally excluded from regression testing:
 Optional mock-based payment tests may be added in a separate suite.
 
 ---
-## 7. Known Issues & Observed Contract Deviations
+## 8. Known Issues & Observed Contract Deviations
 
 The following behaviors are **observed during regression testing**.  
 They are explicitly marked using `pytest.xfail` to preserve test intent while keeping CI results stable.
@@ -251,7 +283,7 @@ They are explicitly marked using `pytest.xfail` to preserve test intent while ke
 - **Impact:** Documented authentication contract (not a test failure)
 
 ---
-## 8. Test Execution
+## 9. Test Execution
 
 ```bash
 # Run smoke tests
@@ -262,3 +294,6 @@ pytest tests/contract
 
 # Run regression tests
 pytest tests/regression
+
+# Run CI regression suite (P0 only)
+pytest tests/reg_ci

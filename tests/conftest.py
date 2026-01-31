@@ -52,3 +52,8 @@ def auth_http(auth_token):
 @pytest.fixture()
 def plain_http():
     return requests.Session()
+
+
+@pytest.fixture(scope="session")
+def test_user():
+    return {"username": "13560421999", "password": "123456"}

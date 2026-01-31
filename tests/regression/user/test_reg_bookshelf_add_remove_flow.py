@@ -4,18 +4,28 @@ from tests.utils.assertions import assert_json_response,assert_ok_true
 
 pytestmark = pytest.mark.regression
 
+def is_truthy_shelf_flag(v):
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, (int, float)):
+        return v == 1
+    if isinstance(v, str):
+        return v.strip().lower() in ("1", "true")
+    return None
+
 def test_reg_bookshelf_add_remove_flow(base_url, auth_token):
     """
-        Regression Test: Complete Bookshelf Lifecycle (Add -> List -> Remove).
+        Regression Test: End-to-End Bookshelf Lifecycle & Pagination Integrity.
 
-        Logic Flow: queryIsInShelf -> addToBookShelf -> listBookShelfByPage -> removeFromBookShelf
+        Logic Flow: Pre-clean -> Add -> State Verify -> Pagination Search -> Remove -> Post-verify.
 
-        This test ensures business consistency for the bookshelf module:
-        1. Pre-check: Determine initial state to prevent environmental contamination.
-        2. Atomic Operation: Adding a book must reflect immediately in status queries.
-        3. Data Consistency: The added book must appear in the paginated bookshelf list.
-        4. Teardown/Cleanup: Removing the book must return the state to False/0.
-    """
+        Checks:
+        1) Idempotency & Setup: Ensures a clean starting state via proactive pre-deletion.
+        2) State Flip: Validates 'queryIsInShelf' accurately reflects the book's presence.
+        3) Pagination Discovery: Confirms that newly added books are correctly indexed in the
+           paginated list API ('listBookShelfByPage').
+        4) Environment Neutrality: Guarantees post-test cleanup via defensive try/finally.
+        """
 
     # independent  session ensure that the state of this test does not contaminate others
     s=requests.Session()
@@ -25,7 +35,13 @@ def test_reg_bookshelf_add_remove_flow(base_url, auth_token):
     # assign existing book ID
     book_id = "2014580673134784512"
 
-    # 1) Is the book on the bookshelf?
+    # Pre-clean: ensure start state is "not in shelf"
+    try:
+        s.delete(f"{base_url}/user/removeFromBookShelf/{book_id}", allow_redirects=False, timeout=10)
+    except Exception:
+        pass
+
+    # 1)  pre-check -> should be false (now controllable)
     resp_in=s.get(base_url + "/user/queryIsInShelf", params={"bookId": book_id}, allow_redirects=False)
     body_in=assert_json_response(resp_in)
     assert_ok_true(body_in)
@@ -35,24 +51,22 @@ def test_reg_bookshelf_add_remove_flow(base_url, auth_token):
     data_in=body_in.get("data")
 
     #Defensive Logic:
-    if isinstance(data_in,bool):
-        already_in = data_in
-    elif isinstance(data_in,(int,str)):
-        already_in = str(data_in) in ("1","true","True","TRUE")
-    else:
-        already_in = None
-
+    assert is_truthy_shelf_flag(body_in.get("data")) is False, body_in
+    added= False
     # 2) main process ,try / finally ensure cleanup
     try:
         # 2.1 add to bookshelf , return response is not mandatory,make sure book in on the bookshelf
         resp_add= s.post(base_url + "/user/addToBookShelf", data={"bookId": book_id}, allow_redirects=False)
         body=assert_json_response(resp_add)
+        assert_ok_true(body)
+        assert body.get("code") == 200
+        added=True
 
         # 2.2 queryIsInShelf, book must be existed in the bookshelf
         resp_in2= s.get(base_url + "/user/queryIsInShelf", params={"bookId": book_id}, allow_redirects=False)
         body_in2= assert_json_response(resp_in2)
         assert_ok_true(body_in2)
-        assert str(body_in2.get("data")).lower() in ("true","1"),body_in2
+        assert is_truthy_shelf_flag(body_in2.get("data")) is True, body_in2
 
         # 2.3 listBookShelfByPage must include the bookId
         found = False
@@ -70,19 +84,26 @@ def test_reg_bookshelf_add_remove_flow(base_url, auth_token):
                     found = True
                     break
         assert found, f"bookId {book_id} not found in first 5 pages"
+        resp_rm = s.delete(f"{base_url}/user/removeFromBookShelf/{book_id}", allow_redirects=False, timeout=10)
+        body_rm = assert_json_response(resp_rm)
+        assert_ok_true(body_rm)
+        assert body_rm.get("code") == 200
+
+        # 6) query -> false
+        resp_in3 = s.get(base_url + "/user/queryIsInShelf", params={"bookId": book_id}, allow_redirects=False, timeout=10)
+        body_in3 = assert_json_response(resp_in3)
+        assert_ok_true(body_in3)
+        assert is_truthy_shelf_flag(body_in3.get("data")) is False, body_in3
+        added = False
+
 
     finally:
         # 3) Cleanup/Teardown: Restore the environment by removing the book
-        # This block runs even if the assertions above fail
-        resp_rm=s.delete(f"{base_url}/user/removeFromBookShelf/{book_id}",allow_redirects=False)
-        body_rm=assert_json_response(resp_rm)
-        assert_ok_true(body_rm)
-
-        # 4) Final Verification: Ensure the book is successfully removed
-        resp_in3 = s.get(base_url + "/user/queryIsInShelf", params={"bookId": book_id}, allow_redirects=False)
-        body_in3 = assert_json_response(resp_in3)
-        assert_ok_true(body_in3)
-        assert str(body_in3.get("data")).lower() in ("false", "0", "none", "null"), body_in3
+        if added:
+            try:
+                s.delete(f"{base_url}/user/removeFromBookShelf/{book_id}", allow_redirects=False, timeout=10)
+            except Exception:
+                pass
 
 
 

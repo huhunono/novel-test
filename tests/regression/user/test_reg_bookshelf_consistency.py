@@ -18,26 +18,35 @@ def test_reg_bookshelf_consistency_nonexistent_bookId_query_true_but_not_in_list
     nonexistent_book_id = 999999999999
     target = str(nonexistent_book_id)
 
-    # 1) add non-existent bookId (currently returns success)
-    r1 = auth_http.post(
-        base_url + "/user/addToBookShelf",data={"bookId": nonexistent_book_id},allow_redirects=False,timeout=10 )
-    b1 = assert_json_response(r1)
-    assert_ok_true(b1)
+    try:
+        # 1) add non-existent bookId (currently returns success)
+        r1 = auth_http.post(
+            base_url + "/user/addToBookShelf",data={"bookId": nonexistent_book_id},allow_redirects=False,timeout=10 )
+        b1 = assert_json_response(r1)
+        assert_ok_true(b1)
 
-    # 2) queryIsInShelf says true (current behavior)
-    r2 = auth_http.get(
-        base_url + "/user/queryIsInShelf",params={"bookId": nonexistent_book_id},allow_redirects=False,timeout=10)
-    b2 = assert_json_response(r2)
-    assert_ok_true(b2)
-    assert b2.get("data") is True
+        # 2) queryIsInShelf says true (current behavior)
+        r2 = auth_http.get(
+            base_url + "/user/queryIsInShelf",params={"bookId": nonexistent_book_id},allow_redirects=False,timeout=10)
+        b2 = assert_json_response(r2)
+        assert_ok_true(b2)
+        assert b2.get("data") is True
 
 
-    # 3) listBookShelfByPage should be consistent with queryIsInShelf
-    r3 = auth_http.get(
-        base_url + "/user/listBookShelfByPage",params={"pageNum": 1, "pageSize": 200},allow_redirects=False,timeout=10)
-    b3 = assert_json_response(r3)
-    assert_ok_true(b3)
+        # 3) listBookShelfByPage should be consistent with queryIsInShelf
+        r3 = auth_http.get(
+            base_url + "/user/listBookShelfByPage",params={"pageNum": 1, "pageSize": 200},allow_redirects=False,timeout=10)
+        b3 = assert_json_response(r3)
+        assert_ok_true(b3)
 
-    items = b3.get("data").get("list")
-    in_list = any(str(x.get("bookId")) == target for x in items)
-    assert in_list is True
+        items = b3.get("data").get("list")
+        in_list = any(str(x.get("bookId")) == target for x in items)
+        assert in_list is True
+
+    finally:
+        # cleanup (even if asserts fail)
+        try:
+            auth_http.delete(f"{base_url}/user/removeFromBookShelf/{nonexistent_book_id}",
+                             allow_redirects=False, timeout=10)
+        except Exception:
+            pass
