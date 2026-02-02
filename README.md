@@ -32,12 +32,16 @@ used by QA / SDET teams, rather than exhaustive endpoint coverage.
 
 ---
 
-## 3. Smoke Test Scope
+# 3. Smoke Test Scope
 
-**Principles**
-- Stable and fast
-- Prefer read-only APIs
-- No complex business dependencies
+Smoke tests provide a **fast go / no-go signal** for the system by validating
+basic availability of **P0 user-facing APIs**.
+
+### Principles
+- **Fast & stable** (seconds-level execution)
+- **Deterministic** (no flaky or environment-sensitive behavior)
+- Prefer **read-only** APIs where possible
+- No complex business logic or cross-API dependencies
 
 ### Included Smoke APIs
 
@@ -46,30 +50,45 @@ used by QA / SDET teams, rather than exhaustive endpoint coverage.
 - `GET /book/queryIndexList?bookId=`
 - `GET /news/listIndexNews`
 - `GET /book/listRank`
+- `GET /book/searchByPage`
 - `POST /user/login`
 - `GET /user/userInfo`
-- `GET /book/searchByPage`
 
-> Smoke tests validate basic availability and response success,
-> without enforcing detailed schema or business logic.
+> Smoke tests verify **service reachability and basic response success**.  
+> They intentionally avoid schema enforcement, deep validation, or business rules.
 
 ---
 
-## 4. Contract Test Scope (Schema Validation)
-**Principles:** 
-- P0 externally consumed APIs, focus on structure integrity.
-- Endpoint-level schemas
+# 4. Contract Test Scope (Schema Validation)
 
+Contract tests ensure that **API response structures remain backward compatible**
+for all consumers (UI, mobile, automation, downstream services).
 
-### 4.1 Schema Modularization & Reuse (Key Architecture)
-To ensure **DRY (Don't Repeat Yourself)** principles and high maintainability, the project uses a modular schema composition strategy:
+### Principles
+- Focus on **P0 externally consumed APIs**
+- Validate **response structure**, not business correctness
+- Prevent breaking changes that would cause parsing or rendering failures
 
-* **`BASE_RESPONSE_SCHEMA`** (`base_response.py`): The universal "envelope" for all responses, defining `code`, `ok`, `msg`, and `data`.
-* **`pagination_schema()`** (`common_pagination.py`): A high-order function that wraps business models into a standard pagination structure,
-including `pageNum`, `pageSize`, `total`, `list`, and `pages`.
+---
 
+## 4.1 Schema Modularization & Reuse (Key Architecture)
 
-### Covered Contract APIs
+To ensure **DRY (Don't Repeat Yourself)** principles and long-term maintainability,
+schemas are composed using reusable building blocks:
+
+- **`BASE_RESPONSE_SCHEMA`** (`base_response.py`)  
+  Defines the universal response envelope:
+  `code`, `ok`, `msg`, `data`
+
+- **`pagination_schema()`** (`common_pagination.py`)  
+  A higher-order schema wrapper for paginated responses, enforcing:
+  `pageNum`, `pageSize`, `total`, `list`, `pages`
+
+This approach enables **consistent contract enforcement** while minimizing duplication.
+
+---
+
+## Covered Contract APIs
 
 - `GET /book/listBookCategory`
 - `GET /book/listRank`
@@ -85,216 +104,201 @@ including `pageNum`, `pageSize`, `total`, `list`, and `pages`.
 These tests ensure:
 - Required fields exist
 - Field types remain compatible
-- Pagination structures do not break consumers
+- Pagination contracts do not break consumers
 
 ---
-## 5. CI Regression Suite (Fast, Deterministic, P0 Coverage)
+
+# 5. CI Regression Suite (PR Gate)
 
 The **CI Regression suite** is a **minimal, deterministic subset of regression tests**
-designed to run on **every CI execution**.
+executed on **every CI run (PR gate)**.
 
-Its purpose is to:
+### Goals
 - Validate **P0 business-critical paths**
 - Catch **high-impact regressions early**
 - Remain **fast, stable, and environment-safe**
 
-This suite intentionally avoids:
+### Explicitly Avoided
 - Large data setup
 - Non-deterministic dependencies
 - Full combinatorial coverage
 
 ---
 
-### CI Regression Coverage
+## CI Regression Coverage
 
-The following tests validate **core system health** and **critical user flows**:
+This suite validates **core system health** and **critical user flows**:
 
-- **`test_book_category_ci`** — Book category API availability and basic data sanity.
-- **`test_book_detail_ci`** — Book detail retrieval and identity consistency by `bookId`.
-- **`test_book_index_list_ci`** — Chapter index list accessibility and structure integrity.
-- **`test_book_rank_ci`** — Ranking list availability for discovery flows.
-- **`test_index_news_ci`** — Homepage news feed availability and display readiness.
-- **`test_user_login_ci`** — Authentication and token usability for authorized APIs.
-- **`test_user_bookshelf_ci`** — Bookshelf lifecycle state consistency  
-  *(Add → Query True → Remove → Query False)*.
+- **`test_book_category_ci`**  
+  Book category API availability and basic data sanity
 
+- **`test_book_detail_ci`**  
+  Book detail retrieval and identity consistency by `bookId`
 
----
+- **`test_book_index_list_ci`**  
+  Chapter index list accessibility and structural integrity
 
-## 6. Regression Test Plan 
+- **`test_book_rank_ci`**  
+  Ranking list availability for discovery flows
 
-Regression tests focus on **business-critical flows**
-and **cross-API consistency**, rather than field-level assertions.
+- **`test_index_news_ci`**  
+  Homepage news feed availability and display readiness
 
-Failure regression tests target **high-risk and high-frequency error paths**, instead of enumerating all possible invalid combinations.
+- **`test_user_login_ci`**  
+  Authentication success and token usability
 
-Regression tests are designed using:
-- Scenario-based testing
-- Equivalence partitioning
-- Boundary value analysis
-- Error guessing based on common production risks
+- **`test_user_bookshelf_ci`**  
+  Minimal bookshelf lifecycle consistency  
+  *(Add → Query True → Remove → Query False)*
 
 ---
 
-### 6.1 Happy Path (Core Business Flows with Scenario-Based Testing)
+# 6. Regression Test Plan
 
-#### Authentication
-- `login → userInfo` (token validity)
-- `login → refreshToken → userInfo` (token refresh)
+Regression tests validate **business correctness, state consistency, and failure handling**
+across API boundaries.
 
-#### Bookshelf State Flow
+They intentionally prioritize **risk-based coverage** over exhaustive permutations.
+
+### Design Techniques
+- **Scenario-based testing**
+- **Equivalence partitioning**
+- **Boundary value analysis**
+- **Error guessing** based on common production risks
+
+---
+
+## 6.1 Happy Path  
+### Core Business Flows (Scenario-Based)
+
+### Authentication Flows
+- `login → userInfo`
+- `login → refreshToken → userInfo`
+
+**Invariant:**  
+Valid tokens must grant access to protected APIs; refreshed tokens must remain usable.
+
+---
+
+### Bookshelf State Flow
 - `addToBookShelf`
 → `queryIsInShelf == true`
 → `listBookShelfByPage` contains book
 → `removeFromBookShelf`
 → `queryIsInShelf == false`
 
-#### Bookshelf Idempotency Rule (Regression Invariant)
+**Invariant:**  
+Bookshelf state must remain consistent across all related APIs.
+
+---
+
+### Bookshelf Idempotency Rule
 
 - `addToBookShelf` (first call)
 → `addToBookShelf` (duplicate call)
-→ `listBookShelfByPage` contains the book **only once** (no duplicates)
+→ `listBookShelfByPage` contains the book **only once**
 
-Covered Tests:
-- `test_reg_addToBookShelf_idempotent_should_not_duplicate`
-
-
-#### Bookshelf Cross-API Consistency (Known Issue)
-Scenario:
-- `addToBookShelf` with a **non-existent bookId**
-- `queryIsInShelf` returns `true`
-- `listBookShelfByPage` does not display the book
-
-Expected invariant:
-- If `queryIsInShelf == true`, the book must appear in `listBookShelfByPage`
-  **OR**
-- `addToBookShelf` should reject a non-existent `bookId`
+**Invariant:**  
+Duplicate operations must not create duplicate state.
 
 Covered test:
-- `test_reg_bookshelf_consistency_nonexistent_bookId_query_true_but_not_in_list` (`xfail`)
-
-#### Book Data Consistency
-- `searchByPage` → `queryBookDetail(bookId)`
-- `queryBookDetail(bookId)` → `queryIndexList(bookId)`
-- All items reference the same `bookId`
-
-#### Comment Flow
-- `addBookComment` (unique content)
-- `listCommentByPage` contains the new comment
+- `test_reg_addToBookShelf_idempotent_should_not_duplicate`
 
 ---
 
+### Bookshelf Cross-API Consistency (Known Issue)
 
+**Scenario:**
+- Add non-existent `bookId`
+- `queryIsInShelf == true`
+- `listBookShelfByPage` does not include the book
 
-### 6.2 Negative Path (Validation, Boundary, Security)
+**Invariant:**
+- `queryIsInShelf == true` ⇒ book must appear in list  
+  **OR**
+- Invalid `bookId` must be rejected at add time
 
-#### A. Equivalence Partitioning (Data Validity)
+Covered test:
+- `test_reg_bookshelf_consistency_nonexistent_bookId_query_true_but_not_in_list` *(xfail)*
+
+---
+
+### Book Data Consistency
+- `searchByPage → queryBookDetail(bookId)`
+- `queryBookDetail(bookId) → queryIndexList(bookId)`
+
+**Invariant:**  
+All endpoints must reference the same `bookId`.
+
+---
+
+### Comment Flow
+- `addBookComment`
+- `listCommentByPage` contains the new comment
+
+**Invariant:**  
+Successfully submitted comments must be visible to users.
+
+---
+
+## 6.2 Negative Path  
+### Validation, Boundary, and Security
+
+### A. Equivalence Partitioning
 
 **Endpoint:** `GET /book/queryBookDetail/{bookId}`
 
-- Valid & exists  
-  Covered by scenario-based regression tests.
-
-- Valid but non-existent  
-  Expected: JSON error response (`HTTP 404` or `code != 200`).
-
-- Invalid format (e.g. `-1`, `"abc"`)  
-  Expected: JSON validation error (`HTTP 400` or `code != 200`).
-
-> Note: Observed deviations from these expectations are documented in **Known Issues**.
+- Valid & exists → covered by happy path
+- Valid but non-existent → safe JSON error, no 5xx
+- Invalid format (`-1`, `"abc"`) → validation failure, no 5xx
 
 ---
 
-#### B. Boundary Value Analysis (Pagination)
+### B. Boundary Value Analysis
 
 **Endpoint:** `GET /book/searchByPage`
 
-- `pageNum = 0` (invalid lower boundary)  
-  Expected: rejected or normalized to `pageNum >= 1` (no `5xx`).
-
-- `pageNum = 2` (valid just-inside value)  
-  Expected: handled normally; empty list acceptable.
-
-- `pageNum = 1` (default valid)  
-  Covered by happy-path regression flows.
-
-- `pageSize = 1` (minimum valid boundary)  
-  Expected: success; result size ≤ 1; pagination metadata consistent.
+- `pageNum = 0` → rejected or normalized, no 5xx
+- `pageNum = 2` → valid; empty list acceptable
+- `pageSize = 1` → success; pagination metadata consistent
 
 ---
 
-### C. Error Guessing (Security & Missing Params)
+### C. Error Guessing (Auth & Security)
 
-Based on experience with similar systems, error-guessing tests focus on **high-risk but
-commonly overlooked scenarios**.
+- Login with invalid password  
+  → authentication fails gracefully  
+  → no token returned  
+  → structured JSON response
 
-- **login invalid password**
-  - Scenario: submit valid username with incorrect password.
-  - Expected: authentication fails gracefully (`ok=false` / `code!=200`), no token returne
-  
 ---
-## 7. Out-of-Scope APIs
 
-The following APIs are intentionally excluded from regression testing:
+# 7. Out-of-Scope APIs
 
-- **Payment APIs** (`/pay/*`)
+The following APIs are intentionally excluded:
+
+- **Payment APIs (`/pay/*`)**
   - External gateway dependency
   - Asynchronous callbacks
-  - Risk of flaky tests
+  - High flakiness risk
+
 - **Author / CMS APIs**
-  - Do not affect core reader user flow
-  - Higher change frequency
-
-Optional mock-based payment tests may be added in a separate suite.
+  - Do not affect core reader flow
+  - High change frequency
 
 ---
-## 8. Known Issues & Observed Contract Deviations
 
-The following behaviors are **observed during regression testing**.  
-They are explicitly marked using `pytest.xfail` to preserve test intent while keeping CI results stable.
+# 8. Known Issues & Observed Contract Deviations
 
-### 1) Non-existent Book ID Error Handling
-- **Endpoint:** `GET /book/queryBookDetail/{bookId}`
-- **Observed Behavior:** Returns an HTML "Not Found" page
-- **Impact:** API contract violation for JSON consumers
-- **Status:** `xfail`
-
-### 2) Invalid `bookId` Parameter Handling
-- **Endpoint:** `GET /book/queryBookDetail/{bookId}`
-- **Inputs:** `-1`, `"abc"`
-- **Observed Behavior:** HTML error response
-- **Impact:** Contract inconsistency
-- **Status:** `xfail`
-
-### 3) Pagination Boundary Handling (`pageNum = 0`)
-- **Endpoint:** `GET /book/searchByPage`
-- **Observed Behavior:** Accepted as valid, returns empty list with `ok=true`
-- **Impact:** Boundary rule violation
-- **Status:** `xfail`
-
-### 4) Bookshelf Cross-API Consistency with Non-existent `bookId`
-- **Observed Behavior:**  
-  `queryIsInShelf == true` but `listBookShelfByPage` does not include the book
-- **Impact:** Business contract inconsistency
-- **Status:** `xfail`
-
-### 5) Token Refresh Behavior (Observed Contract)
-- **Behavior:** `/user/refreshToken` issues a new token without revoking previously issued tokens
-- **Note:** Old tokens remain valid until natural expiration
-- **Impact:** Documented authentication contract (not a test failure)
+Observed behaviors are documented and explicitly marked with `pytest.xfail`
+to preserve intent while keeping CI stable.
 
 ---
-## 9. Test Execution
+
+# 9. Test Execution
 
 ```bash
-# Run smoke tests
 pytest tests/smoke
-
-# Run contract tests
 pytest tests/contract
-
-# Run regression tests
 pytest tests/regression
-
-# Run CI regression suite (P0 only)
 pytest tests/reg_ci
