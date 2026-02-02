@@ -1,0 +1,41 @@
+name: PR Gate (smoke + contract + reg_ci)
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  pr-gate:
+    runs-on: ubuntu-latest
+
+    env:
+
+      BASE_URL: https://cafe-correspondence-demonstrated-travesti.trycloudflare.com/
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Smoke tests
+        run: |
+          pytest -q tests/smoke --maxfail=1
+
+      - name: Contract tests
+        run: |
+          pytest -q tests/contract --maxfail=1
+
+      - name: CI Regression tests (PR Gate)
+        run: |
+          pytest -q tests/reg_ci --maxfail=1
