@@ -1,3 +1,5 @@
+import os
+
 import pytest
 import requests
 
@@ -39,7 +41,7 @@ def auth_token(base_url):
 
 @pytest.fixture(scope="session")
 def base_url():
-    return "http://172.28.0.1:8083"
+    return os.getenv("BASE_URL", "http://172.28.0.1:8083")
 
 @pytest.fixture()
 def auth_http(auth_token):
