@@ -2,6 +2,8 @@ import os
 
 import pytest
 import requests
+import pymysql
+
 
 @pytest.fixture(scope="session")
 def http():
@@ -49,13 +51,50 @@ def auth_http(auth_token):
     s.headers.update({
         "Authorization": auth_token
     })
-    return s
+    yield s
+    s.close()
 
 @pytest.fixture()
 def plain_http():
-    return requests.Session()
+    s=requests.Session()
+    yield s
+    s.close()
 
 
 @pytest.fixture(scope="session")
 def test_user():
     return {"username": "13560421999", "password": "123456"}
+
+
+@pytest.fixture(scope="session")
+def db_conn():
+    conn = pymysql.connect(
+        host=os.getenv("DB_HOST", "127.0.0.1"),
+        port=int(os.getenv("DB_PORT", "3306")),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", "root"),
+        database=os.getenv("DB_NAME", "novel"),
+        charset="utf8mb4",
+        autocommit=True,
+        cursorclass=pymysql.cursors.DictCursor,
+    )
+    yield conn
+    conn.close()
+
+def db_one(conn, sql, params=None):
+    with conn.cursor() as cur:
+        cur.execute(sql, params or ())
+        return cur.fetchone()
+
+def db_all(conn, sql, params=None):
+    with conn.cursor() as cur:
+        cur.execute(sql, params or ())
+        return cur.fetchall()
+
+
+@pytest.fixture(scope="session")
+def test_user_id(db_conn, test_user):
+    username = test_user["username"]
+    row = db_one(db_conn, "SELECT id FROM user WHERE username=%s", (username,))
+    assert row and "id" in row, f"user not found in DB: username={username}"
+    return row["id"]
