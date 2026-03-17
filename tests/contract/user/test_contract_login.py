@@ -1,5 +1,4 @@
 import pytest
-import requests
 from jsonschema import validate
 from schemas.endpoints.user.login_response import LOGIN_RESPONSE_DATA_SCHEMA
 from tests.utils.assertions import assert_json_response
@@ -33,5 +32,3 @@ def test_contract_login_failure_schema(base_url,plain_http):
     body = resp.json()
     assert body["ok"] is False
     assert body["data"] is None
-
-

@@ -2,7 +2,7 @@ import pytest
 from tests.utils.assertions import assert_json_response,assert_ok_true
 
 @pytest.mark.reg_ci
-def test_list_rank_type_1_basic( plain_http, base_url):
+def test_list_rank_type_1_basic(book_client):
     """
         CI Regression Test: listRank (Type 1) basic sanity for PR gate.
 
@@ -15,7 +15,7 @@ def test_list_rank_type_1_basic( plain_http, base_url):
            with a valid 'bookName' string for display.
 
     """
-    resp=plain_http.get(base_url+"/book/listRank",params={"type":1},allow_redirects=False,timeout=20)
+    resp = book_client.list_rank(type_=1, allow_redirects=False, timeout=20)
     body=assert_json_response(resp)
     assert_ok_true(body)
 

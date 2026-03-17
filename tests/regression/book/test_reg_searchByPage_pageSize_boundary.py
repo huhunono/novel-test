@@ -1,10 +1,13 @@
 import pytest
-from tests.utils.assertions import assert_json_response,assert_ok_true
+
+from clients.base_client import BaseClient
+from tests.utils.assertions import assert_json_response, assert_ok_true
 
 pytestmark = pytest.mark.regression
 
+
 # ---------------------- BVA 1: pageSize = 1 ----------------------
-def test_reg_searchByPage_pageSize_one_should_return_at_most_one_item(base_url, plain_http):
+def test_reg_searchByPage_pageSize_one_should_return_at_most_one_item(base_url: str, plain_http: BaseClient) -> None:
     """
         Regression Test: Verify Pagination Boundary for Minimal Page Size.
 
@@ -15,14 +18,16 @@ def test_reg_searchByPage_pageSize_one_should_return_at_most_one_item(base_url, 
         2. Data Integrity: Verifies the 'pageSize' metadata in the response matches the requested parameter.
         3. Resource Optimization: Ensures the API does not over-fetch data, protecting downstream consumers from bulk payloads.
     """
-    params = {"limit":"1"}
-    resp =plain_http.get(base_url + "/book/searchByPage", params=params, allow_redirects=False,timeout=10)
+    # BVA: intentionally passes raw string "1" (not int 1) to probe API input handling.
+    # Uses assert_json_response after status check — this test expects a valid 200 response.
+    params = {"limit": "1"}
+    resp = plain_http.get(base_url + "/book/searchByPage", params=params, allow_redirects=False, timeout=10)
 
     assert resp.status_code < 500
 
     if resp.status_code != 200:
         return
-    body= assert_json_response(resp)
+    body = assert_json_response(resp)
     assert_ok_true(body)
 
     data = body.get("data")

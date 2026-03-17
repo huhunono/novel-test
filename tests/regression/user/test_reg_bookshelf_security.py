@@ -1,8 +1,12 @@
 import pytest
 
+from clients.base_client import BaseClient
+from tests.data.books import BOOK_ID_SHELF_FLOW
+
 pytestmark = pytest.mark.regression
 
-def test_reg_bookshelf_add_requires_auth(base_url, plain_http):
+
+def test_reg_bookshelf_add_requires_auth(base_url: str, plain_http: BaseClient) -> None:
     """
         Regression Test: Verify Authorization Enforcement for Bookshelf Operations.
 
@@ -13,10 +17,9 @@ def test_reg_bookshelf_add_requires_auth(base_url, plain_http):
         2. The system must not allow state changes for unauthenticated sessions.
         3. The response must clearly indicate a failure (ok: False) or a non-success code.
     """
+    book_id: str = BOOK_ID_SHELF_FLOW
 
-    book_id = "2014580673134784512"
-
-    resp=plain_http.post(base_url + "/user/addToBookShelf",data={"bookId": book_id},allow_redirects=False)
+    resp = plain_http.post(base_url + "/user/addToBookShelf", data={"bookId": book_id}, allow_redirects=False)
     if resp.status_code in (401, 403):
         return
     ct = resp.headers.get("content-type", "")

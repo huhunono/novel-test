@@ -1,10 +1,11 @@
 import pytest
-from tests.utils.assertions import assert_json_response,assert_ok_true
+
+from tests.data.books import BOOK_ID_DETAIL
+from tests.utils.assertions import assert_json_response, assert_ok_true
 
 
 @pytest.mark.reg_ci
-
-def test_query_index_list_basic(plain_http, base_url):
+def test_query_index_list_basic(book_client):
     """
         CI Regression Test: queryIndexList basic sanity for PR gate.
 
@@ -16,8 +17,7 @@ def test_query_index_list_basic(plain_http, base_url):
         3) Content Integrity: Ensures chapters exist (len > 0) and each has a valid 'id' and 'indexName'.
 
     """
-    book_id = 2010824442059300864
-    resp=plain_http.get(base_url + "/book/queryIndexList",params={"bookId":book_id},allow_redirects=False,timeout=20)
+    resp = book_client.query_index_list(str(BOOK_ID_DETAIL), allow_redirects=False, timeout=20)
     body = assert_json_response(resp)
     assert_ok_true(body)
     assert body.get("code") == 200
@@ -40,4 +40,3 @@ def test_query_index_list_basic(plain_http, base_url):
     index_name = first.get("indexName")
     assert isinstance(index_name, str)
     assert index_name.strip()
-

@@ -1,6 +1,9 @@
+from typing import Any, Dict
+
 import requests
 
-def assert_json_response(resp: requests.Response) -> dict:
+
+def assert_json_response(resp: requests.Response) -> Dict[str, Any]:
     """
     Basic HTTP + JSON validation.
     No business logic included.
@@ -16,10 +19,10 @@ def assert_json_response(resp: requests.Response) -> dict:
 
     return resp.json()
 
-def assert_ok_true(body: dict):
+
+def assert_ok_true(body: Dict[str, Any]) -> None:
     assert body.get("ok") is True, body
 
-def assert_ok_false(body: dict):
+
+def assert_ok_false(body: Dict[str, Any]) -> None:
     assert body.get("ok") is False, body
-
-

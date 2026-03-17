@@ -1,0 +1,21 @@
+Project: novel-quality-platform
+
+This project is an API-first automation quality platform designed to demonstrate production-style test architecture.
+
+Architecture rules:
+- Keep a clear separation between Client Layer, Validation Layer, Test Data Layer, Test Layer, CI/CD, and AI-assisted failure triage.
+- API clients must only handle HTTP request/response concerns and return raw responses.
+- Do not put assertions, schema validation, or business logic into client classes.
+- Keep reusable response/schema checks in validators/.
+- Keep JSON Schema contract definitions in schemas/. Do not replace them with Pydantic models for API contract testing.
+- Keep static constants and lightweight generators in tests/data/.
+- Keep DB helpers in tests/utils/ as support utilities.
+- Smoke tests must be fast, deterministic, and preferably read-only.
+- Contract tests validate response structure/schema compatibility, not deep business behavior.
+- reg_ci tests are PR-gate-safe core regression subsets.
+- Regression tests may include negative, boundary, idempotency, and DB state validation when needed.
+- Prefer simple function-based validators over class-heavy abstractions.
+- AI may only be used for failure triage after test execution. It must not decide pass/fail, auto-fix tests, or generate merge-ready test logic.
+- Do not introduce LangChain, LangGraph, or vector databases for failure triage.
+- UI automation is optional Phase 3 work and should stay minimal: only smoke + one critical E2E if requested.
+- Maintain code that is realistic, minimal, deterministic, and interview-ready.

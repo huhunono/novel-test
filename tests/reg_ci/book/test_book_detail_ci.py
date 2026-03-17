@@ -1,8 +1,11 @@
 import pytest
-from tests.utils.assertions import assert_json_response,assert_ok_true
+
+from tests.data.books import BOOK_ID_DETAIL
+from tests.utils.assertions import assert_json_response, assert_ok_true
+
 
 @pytest.mark.reg_ci
-def test_query_book_detail_basic(plain_http, base_url):
+def test_query_book_detail_basic(book_client):
     """
         CI Regression Test: queryBookDetail basic sanity for PR gate.
 
@@ -13,19 +16,14 @@ def test_query_book_detail_basic(plain_http, base_url):
         2) Identity Integrity: Verifies that the 'id' in the response matches the requested 'book_id'.
         3) Content Reliability: Ensures 'bookName' is a valid, non-empty string for frontend display.
     """
-    book_id = 2010824442059300864
-    resp=plain_http.get(base_url + f"/book/queryBookDetail/{book_id}",allow_redirects=False,timeout=20)
-    body=assert_json_response(resp)
+    resp = book_client.query_detail(str(BOOK_ID_DETAIL), allow_redirects=False, timeout=20)
+    body = assert_json_response(resp)
     assert_ok_true(body)
     data = body.get("data")
     assert isinstance(data, dict)
 
-    assert str(data.get("id")) == str(book_id)
+    assert str(data.get("id")) == str(BOOK_ID_DETAIL)
 
     book_name = data.get("bookName")
     assert isinstance(book_name, str)
     assert book_name.strip()
-
-
-
-

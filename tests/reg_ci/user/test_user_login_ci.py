@@ -1,9 +1,13 @@
-import pytest
-import requests
+from typing import Dict
 
-from tests.utils.assertions import assert_json_response,assert_ok_true
+import pytest
+
+from clients.base_client import BaseClient
+from tests.utils.assertions import assert_json_response, assert_ok_true
+
+
 @pytest.mark.reg_ci
-def test_reg_ci_login_and_token_usable(plain_http, base_url,test_user):
+def test_reg_ci_login_and_token_usable(plain_http: BaseClient, base_url: str, test_user: Dict[str, str]) -> None:
     """
         CI Regression Test: Authentication Flow and Token Usability.
 
@@ -24,15 +28,14 @@ def test_reg_ci_login_and_token_usable(plain_http, base_url,test_user):
     data=body.get("data")
     assert isinstance(data,dict)
 
-    token=data.get("token")
+    token = data.get("token")
     assert isinstance(token, str)
     assert token.strip()
 
     # use token to access protected API
-    auth_http = requests.Session()
-    auth_http.headers.update({"Authorization": token})
+    plain_http.headers.update({"Authorization": token})
 
-    resp_userinfo = auth_http.get(base_url + "/user/userInfo",allow_redirects=False,timeout=20)
+    resp_userinfo = plain_http.get(base_url + "/user/userInfo", allow_redirects=False, timeout=20)
     body_userinfo = assert_json_response(resp_userinfo)
     assert_ok_true(body_userinfo)
     assert body_userinfo.get("code") == 200

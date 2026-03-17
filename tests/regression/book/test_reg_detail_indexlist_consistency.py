@@ -4,7 +4,7 @@ from tests.regression.book.test_reg_search_detail_consistency import _pick_first
 
 pytestmark = pytest.mark.regression
 
-def test_reg_detail_to_indexlist_bookid_consistent(auth_http, base_url):
+def test_reg_detail_to_indexlist_bookid_consistent(book_client):
     """
         Regression Test: Verify Foreign Key Integrity between Book Details and Chapter Index.
 
@@ -18,31 +18,30 @@ def test_reg_detail_to_indexlist_bookid_consistent(auth_http, base_url):
 
     """
     # 1) searchByPage
-    params={"pageNum":1,"pageSize":10}
-    resp_search=auth_http.get(base_url + "/book/searchByPage",params=params,allow_redirects=False)
-    body_search=assert_json_response(resp_search)
+    resp_search = book_client.search_by_page(page_num=1, page_size=10, allow_redirects=False)
+    body_search = assert_json_response(resp_search)
     assert_ok_true(body_search)
 
-    book=_pick_first_book_from_search(body_search)
+    book = _pick_first_book_from_search(body_search)
 
     # get book id
-    book_id=book.get("id")
-    assert book_id is not None,book
+    book_id = book.get("id")
+    assert book_id is not None, book
 
     # Normalize IDs early
-    book_id=str(book_id)
+    book_id = str(book_id)
 
 
     # 2) queryBookDetail/{bookId}
-    resp_detail = auth_http.get(base_url + f"/book/queryBookDetail/{book_id}", allow_redirects=False)
+    resp_detail = book_client.query_detail(book_id, allow_redirects=False)
     body_detail = assert_json_response(resp_detail)
     assert_ok_true(body_detail)
 
-    detail=body_detail.get("data")
-    assert isinstance(detail,dict), detail
+    detail = body_detail.get("data")
+    assert isinstance(detail, dict), detail
 
     # 3) indexList
-    resp_index = auth_http.get(base_url + "/book/queryIndexList",params={"bookId": book_id},allow_redirects=False)
+    resp_index = book_client.query_index_list(book_id, allow_redirects=False)
     body_index = assert_json_response(resp_index)
     assert_ok_true(body_index)
 

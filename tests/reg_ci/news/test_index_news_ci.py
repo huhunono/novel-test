@@ -2,7 +2,7 @@ import pytest
 from tests.utils.assertions import assert_json_response,assert_ok_true
 
 @pytest.mark.reg_ci
-def test_reg_ci_list_index_news_basic(plain_http, base_url):
+def test_reg_ci_list_index_news_basic(news_client):
     """
         CI Regression Test: Verify Homepage News List Integrity.
 
@@ -14,7 +14,7 @@ def test_reg_ci_list_index_news_basic(plain_http, base_url):
         3) Display Readiness: Validates that 'title' is a non-empty string to prevent UI layout collapse.
 
     """
-    resp=plain_http.get(base_url + "/news/listIndexNews",allow_redirects=False,timeout=20)
+    resp = news_client.list_index_news(allow_redirects=False, timeout=20)
 
     body=assert_json_response(resp)
 
