@@ -1,25 +1,26 @@
-import requests
+"""
+tests/utils/assertions.py  —  COMPATIBILITY SHIM
 
-def assert_json_response(resp: requests.Response) -> dict:
-    """
-    Basic HTTP + JSON validation.
-    No business logic included.
-    """
-    assert resp.status_code == 200, (
-        f"status={resp.status_code}, text={resp.text[:300]}"
-    )
+This module re-exports all public assertion functions from validators/.
+All existing imports across the test suite continue to work unchanged:
 
-    ct = resp.headers.get("content-type", "")
-    assert "application/json" in ct, (
-        f"non-json response: ct={ct}, text={resp.text[:300]}"
-    )
+    from tests.utils.assertions import assert_json_response
+    from tests.utils.assertions import assert_ok_true
+    from tests.utils.assertions import assert_ok_false
 
-    return resp.json()
+Do NOT add new assertion logic here.
+New assertions belong in validators/response_validator.py.
+This file exists only to preserve backward-compatible import paths.
+"""
 
-def assert_ok_true(body: dict):
-    assert body.get("ok") is True, body
+from validators.response_validator import (  # noqa: F401  re-exported
+    assert_json_response,
+    assert_ok_false,
+    assert_ok_true,
+)
 
-def assert_ok_false(body: dict):
-    assert body.get("ok") is False, body
-
-
+__all__ = [
+    "assert_json_response",
+    "assert_ok_true",
+    "assert_ok_false",
+]

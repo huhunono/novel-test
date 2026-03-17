@@ -17,7 +17,7 @@ def _pick_first_book_from_search(body: dict) -> dict:
     return book
 
 
-def test_reg_search_to_detail_key_fields_consistent(auth_http, base_url):
+def test_reg_search_to_detail_key_fields_consistent(book_client):
     """
         Regression Test: Verify Data Consistency between Search Index and Book Details.
 
@@ -30,33 +30,32 @@ def test_reg_search_to_detail_key_fields_consistent(auth_http, base_url):
     """
 
     # 1) send searchByPage request
-    params={"pageNum":1,"pageSize":10}
-    resp_search=auth_http.get(base_url + "/book/searchByPage",params=params,allow_redirects=False)
-    body_search=assert_json_response(resp_search)
+    resp_search = book_client.search_by_page(page_num=1, page_size=10, allow_redirects=False)
+    body_search = assert_json_response(resp_search)
     assert_ok_true(body_search)
 
-    book=_pick_first_book_from_search(body_search)
+    book = _pick_first_book_from_search(body_search)
 
     # get book id
-    book_id=book.get("id")
-    assert book_id is not None,book
+    book_id = book.get("id")
+    assert book_id is not None, book
 
     # Normalize IDs early
-    book_id=str(book_id)
+    book_id = str(book_id)
 
-    search_book_name=book.get("bookName")
-    search_author_name=book.get("authorName")
+    search_book_name = book.get("bookName")
+    search_author_name = book.get("authorName")
 
     # 2) queryBookDetail/{bookId}
-    resp_detail = auth_http.get(base_url + f"/book/queryBookDetail/{book_id}", allow_redirects=False)
+    resp_detail = book_client.query_detail(book_id, allow_redirects=False)
     body_detail = assert_json_response(resp_detail)
     assert_ok_true(body_detail)
 
-    detail=body_detail.get("data")
-    assert isinstance(detail,dict), detail
+    detail = body_detail.get("data")
+    assert isinstance(detail, dict), detail
 
-    detail_book_name=detail.get("bookName")
-    detail_author_name=detail.get("authorName")
+    detail_book_name = detail.get("bookName")
+    detail_author_name = detail.get("authorName")
 
     if search_book_name is not None and detail_book_name is not None:
         assert str(search_book_name) == str(detail_book_name), (search_book_name, detail_book_name)

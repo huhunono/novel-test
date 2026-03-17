@@ -1,4 +1,3 @@
-import requests
 import pytest
 from tests.utils.assertions import assert_json_response
 pytestmark = pytest.mark.smoke

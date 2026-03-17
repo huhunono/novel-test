@@ -1,12 +1,13 @@
 import pytest
-import requests
 from jsonschema import validate
+
 from schemas.endpoints.user.login_response import LOGIN_RESPONSE_DATA_SCHEMA
 from tests.utils.assertions import assert_json_response
 
 pytestmark = pytest.mark.contract
 
-def test_contract_login_response_schema(base_url,plain_http,test_user):
+
+def test_contract_login_response_schema(base_url, plain_http, test_user):
     """
         Test Case: Verify User Login Success Contract.
 
@@ -15,23 +16,13 @@ def test_contract_login_response_schema(base_url,plain_http,test_user):
         2. Authentication token presence and format in 'data' field.
         3. User profile metadata structure (matches LOGIN_RESPONSE_DATA_SCHEMA).
     """
-
-    resp = plain_http.post(base_url +"/user/login", data=test_user, allow_redirects=False,timeout=10)
+    resp = plain_http.post(base_url + "/user/login", data=test_user, allow_redirects=False, timeout=10)
     body = assert_json_response(resp)
-
-    validate(instance=body,schema=LOGIN_RESPONSE_DATA_SCHEMA)
+    validate(instance=body, schema=LOGIN_RESPONSE_DATA_SCHEMA)
     assert body["ok"] is True and body["code"] == 200
 
-def test_contract_login_failure_schema(base_url,plain_http):
-    invalid_login_data={
-        "username": "13560421999",
-        "password": ""
-    }
-    resp = plain_http.post(base_url + "/user/login", data=invalid_login_data, allow_redirects=False,timeout=10)
-    assert resp.status_code in (200, 400, 401, 422)
 
-    body = resp.json()
-    assert body["ok"] is False
-    assert body["data"] is None
-
-
+# NOTE: The negative login path (empty/wrong password → ok=False) is a
+# business-behavior test, not a schema/contract test.
+# It lives in: tests/regression/user/test_reg_login_invalid.py
+# Contract tests only validate response schema structure.
