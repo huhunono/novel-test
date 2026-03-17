@@ -9,10 +9,10 @@ on:
 jobs:
   pr-gate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     env:
-
-      BASE_URL: https://cafe-correspondence-demonstrated-travesti.trycloudflare.com/
+      BASE_URL: ${{ secrets.BASE_URL }}
 
     steps:
       - name: Checkout code
@@ -30,12 +30,21 @@ jobs:
 
       - name: Smoke tests
         run: |
-          pytest -q tests/smoke --maxfail=1
+          pytest -q --tb=short tests/smoke --maxfail=1
 
       - name: Contract tests
         run: |
-          pytest -q tests/contract --maxfail=1
+          pytest -q --tb=short tests/contract --maxfail=1
 
       - name: CI Regression tests (PR Gate)
         run: |
-          pytest -q tests/reg_ci --maxfail=1
+          pytest -q --tb=short tests/reg_ci --maxfail=1 \
+            --json-report --json-report-file=report.json
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report-${{ github.run_id }}
+          path: report.json
+          retention-days: 7

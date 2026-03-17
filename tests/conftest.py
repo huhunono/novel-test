@@ -20,31 +20,42 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(scope="session")
 def auth_token(base_url: str) -> str:
     client = BaseClient(base_url=base_url)
-    resp = client.post(
-        "/user/login",
-        data={
-            "username": TEST_USERNAME,
-            "password": TEST_PASSWORD,
-        },
-        allow_redirects=False,
-    )
-    logger.debug("LOGIN status=%s ct=%s body=%s",
-                 resp.status_code,
-                 resp.headers.get("Content-Type"),
-                 resp.text[:500])
+    try:
+        resp = client.post(
+            "/user/login",
+            data={
+                "username": TEST_USERNAME,
+                "password": TEST_PASSWORD,
+            },
+            allow_redirects=False,
+        )
+        logger.debug(
+            "LOGIN status=%s ct=%s body=%s",
+            resp.status_code,
+            resp.headers.get("Content-Type"),
+            resp.text[:500],
+        )
 
-    ct = resp.headers.get("Content-Type", "")
-    assert resp.status_code == 200
-    assert "application/json" in ct, (
-        f"Login response not JSON. "
-        f"status={resp.status_code}, ct={ct}, text={resp.text[:200]}"
-    )
-    body = resp.json()
-    assert body.get("ok") is True, body
-    token: str = body["data"]["token"]
-    assert isinstance(token, str) and token, body
-    client.close()
-    return token
+        ct = resp.headers.get("Content-Type", "")
+        if resp.status_code != 200:
+            pytest.fail(
+                f"[auth_token] Login failed: HTTP {resp.status_code}, "
+                f"body={resp.text[:300]}"
+            )
+        if "application/json" not in ct:
+            pytest.fail(
+                f"[auth_token] Login response is not JSON: "
+                f"ct={ct}, status={resp.status_code}, body={resp.text[:200]}"
+            )
+        body = resp.json()
+        if body.get("ok") is not True:
+            pytest.fail(f"[auth_token] Login ok!=True: {body}")
+        token: str = body["data"]["token"]
+        if not isinstance(token, str) or not token:
+            pytest.fail(f"[auth_token] Token missing or invalid: {body}")
+        return token
+    finally:
+        client.close()
 
 
 @pytest.fixture(scope="session")

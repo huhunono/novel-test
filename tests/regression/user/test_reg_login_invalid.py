@@ -4,7 +4,26 @@ from tests.utils.assertions import assert_ok_false
 pytestmark = pytest.mark.regression
 
 
-def test_reg_login_invalid_password_should_fail(base_url, plain_http,test_user):
+def test_reg_login_empty_password_should_fail(base_url, plain_http) -> None:
+    """
+        Regression Test: Login with empty password must be rejected.
+
+        Moved from tests/contract/ — this is a business-behavior negative test,
+        not a schema/contract test.
+    """
+    resp = plain_http.post(
+        base_url + "/user/login",
+        data={"username": "13560421999", "password": ""},
+        allow_redirects=False,
+        timeout=10,
+    )
+    assert resp.status_code in (200, 400, 401, 422)
+    body = resp.json()
+    assert body["ok"] is False
+    assert body["data"] is None
+
+
+def test_reg_login_invalid_password_should_fail(base_url, plain_http, test_user):
     """
         CI Regression Test: Handle Login with invalid credentials.
 

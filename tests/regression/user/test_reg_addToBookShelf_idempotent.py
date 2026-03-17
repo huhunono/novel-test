@@ -3,6 +3,7 @@ import logging
 import pytest
 
 from clients.user_client import UserClient
+from tests.data.books import BOOK_ID_IDEMPOTENT
 from tests.utils.db_helpers import db_one
 from tests.utils.assertions import assert_json_response, assert_ok_true
 
@@ -27,7 +28,7 @@ def test_reg_addToBookShelf_idempotent_should_not_duplicate(
         2. Business Logic Integrity: Verifies the backend handles "already exists" scenario gracefully.
         3. Collection Accuracy: Confirms the book count in the shelf remains <= 1, preventing UI display bugs.
     """
-    book_id: int = 2014580046711287808
+    book_id: str = BOOK_ID_IDEMPOTENT
 
     try:
         # 1) same book added twice

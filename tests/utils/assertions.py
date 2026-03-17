@@ -1,28 +1,26 @@
-from typing import Any, Dict
+"""
+tests/utils/assertions.py  —  COMPATIBILITY SHIM
 
-import requests
+This module re-exports all public assertion functions from validators/.
+All existing imports across the test suite continue to work unchanged:
 
+    from tests.utils.assertions import assert_json_response
+    from tests.utils.assertions import assert_ok_true
+    from tests.utils.assertions import assert_ok_false
 
-def assert_json_response(resp: requests.Response) -> Dict[str, Any]:
-    """
-    Basic HTTP + JSON validation.
-    No business logic included.
-    """
-    assert resp.status_code == 200, (
-        f"status={resp.status_code}, text={resp.text[:300]}"
-    )
+Do NOT add new assertion logic here.
+New assertions belong in validators/response_validator.py.
+This file exists only to preserve backward-compatible import paths.
+"""
 
-    ct = resp.headers.get("content-type", "")
-    assert "application/json" in ct, (
-        f"non-json response: ct={ct}, text={resp.text[:300]}"
-    )
+from validators.response_validator import (  # noqa: F401  re-exported
+    assert_json_response,
+    assert_ok_false,
+    assert_ok_true,
+)
 
-    return resp.json()
-
-
-def assert_ok_true(body: Dict[str, Any]) -> None:
-    assert body.get("ok") is True, body
-
-
-def assert_ok_false(body: Dict[str, Any]) -> None:
-    assert body.get("ok") is False, body
+__all__ = [
+    "assert_json_response",
+    "assert_ok_true",
+    "assert_ok_false",
+]
