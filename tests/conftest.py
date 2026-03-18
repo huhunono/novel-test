@@ -60,7 +60,7 @@ def auth_token(base_url: str) -> str:
 
 @pytest.fixture(scope="session")
 def base_url() -> str:
-    return os.getenv("BASE_URL", "http://172.28.0.1:8083")
+    return os.getenv("BASE_URL", "http://127.0.0.1:8083")
 
 
 @pytest.fixture()
@@ -85,6 +85,16 @@ def plain_http(base_url: str) -> Generator[BaseClient, None, None]:
 
 
 @pytest.fixture()
+def base_client() -> Generator[BaseClient, None, None]:
+    """BaseClient pointed at JSONPlaceholder for CI connectivity smoke test."""
+    client = BaseClient(base_url="https://jsonplaceholder.typicode.com")
+    try:
+        yield client
+    finally:
+        client.close()
+
+
+@pytest.fixture()
 def news_client(plain_http: BaseClient) -> NewsClient:
     """NewsClient wrapping the plain HTTP client (no auth required for listIndexNews)."""
     return NewsClient(plain_http)
@@ -92,7 +102,7 @@ def news_client(plain_http: BaseClient) -> NewsClient:
 
 @pytest.fixture()
 def book_client(plain_http: BaseClient) -> BookClient:
-    """BookClient wrapping the plain HTTP client (no auth — read-only endpoints)."""
+    """BookClient wrapping the plain HTTP client (no auth - read-only endpoints)."""
     return BookClient(plain_http)
 
 
