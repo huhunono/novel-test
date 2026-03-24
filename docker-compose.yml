@@ -1,0 +1,44 @@
+# docker-compose.yml — local dev + CI backend stack
+#
+# Usage:
+#   docker compose up -d --wait   # start all services and wait until healthy
+#   docker compose down -v         # teardown
+#
+# The novel-api image must be built or pulled before CI runs.
+# Set NOVEL_API_IMAGE in your environment or GitHub Actions secrets,
+# or replace the image value with the correct registry path.
+
+version: "3.9"
+
+services:
+  novel-api:
+    image: ${NOVEL_API_IMAGE:-novel-api:latest}
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/novel_plus?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-root}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-test123456}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8083/book/listBookCategory"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-test123456}
+      MYSQL_DATABASE: novel_plus
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-test123456}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s

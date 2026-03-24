@@ -21,8 +21,3 @@ def test_contract_login_response_schema(base_url, plain_http, test_user):
     validate(instance=body, schema=LOGIN_RESPONSE_DATA_SCHEMA)
     assert body["ok"] is True and body["code"] == 200
 
-
-# NOTE: The negative login path (empty/wrong password → ok=False) is a
-# business-behavior test, not a schema/contract test.
-# It lives in: tests/regression/user/test_reg_login_invalid.py
-# Contract tests only validate response schema structure.
