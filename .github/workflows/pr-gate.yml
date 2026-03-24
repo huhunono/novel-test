@@ -1,120 +1,120 @@
-name: PR Gate (smoke + contract + reg_ci)
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-
-jobs:
-  pr-gate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    env:
-      BASE_URL: http://localhost:8083
-      TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
-      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
-      DB_HOST: 127.0.0.1
-      DB_PORT: "3307"
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_NAME: novel_plus
-
-    steps:
-      # ── 1. Checkout automation repo ─────────────────────────────────────────
-      - name: Checkout automation repo
-        uses: actions/checkout@v4
-
-      # ── 2. Checkout backend repo into ./backend ──────────────────────────────
-      - name: Checkout backend repo
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ secrets.BACKEND_REPO }}
-          token: ${{ secrets.BACKEND_REPO_TOKEN }}
-          path: backend
-
-      # ── 3. Set up JDK 17 ────────────────────────────────────────────────────
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-          cache: maven
-
-      # ── 4. Build backend JAR ─────────────────────────────────────────────────
-      - name: Build backend
-        working-directory: backend
-        run: mvn -pl novel-front -am clean package -DskipTests
-
-      # ── 5. Start backend services (uses backend/docker-compose.yml) ──────────
-      - name: Start backend services
-        working-directory: backend
-        env:
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_USER: ${{ secrets.DB_USER }}
-        run: docker compose up -d
-
-      # ── 6. Wait for backend API readiness ───────────────────────────────────
-      - name: Wait for API readiness
-        run: |
-          echo "Waiting for backend at $BASE_URL ..."
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:8083/book/listClickRank > /dev/null 2>&1; then
-              echo "Backend is ready after ${i} attempts."
-              exit 0
-            fi
-            echo "Attempt $i/30 — not ready yet, sleeping 10s"
-            sleep 10
-          done
-          echo "ERROR: backend did not become ready in 300s"
-          docker compose -f backend/docker-compose.yml logs
-          exit 1
-
-      # ── 7. Set up Python 3.11 ────────────────────────────────────────────────
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-
-      # ── 8. Install test dependencies ─────────────────────────────────────────
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      # ── 9a. Smoke tests ──────────────────────────────────────────────────────
-      - name: Smoke tests
-        run: pytest -q --tb=short tests/smoke --maxfail=1
-
-      # ── 9b. Contract tests ───────────────────────────────────────────────────
-      - name: Contract tests
-        run: pytest -q --tb=short tests/contract --maxfail=1
-
-      # ── 9c. CI Regression tests ──────────────────────────────────────────────
-      - name: CI Regression tests
-        run: |
-          pytest -q --tb=short tests/reg_ci --maxfail=1 \
-            --json-report --json-report-file=report.json
-
-      # ── 10. Show logs on failure ─────────────────────────────────────────────
-      - name: Show backend logs on failure
-        if: failure()
-        working-directory: backend
-        run: docker compose logs
-
-      # ── 11. Upload test report artifact ──────────────────────────────────────
-      - name: Upload test report
-        if: always() && hashFiles('report.json') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-report-${{ github.run_id }}
-          path: report.json
-          retention-days: 7
-
-      # ── 12. Teardown services ─────────────────────────────────────────────────
-      - name: Teardown services
-        if: always()
-        working-directory: backend
-        run: docker compose down -v
+name: PR Gate (smoke + contract + reg_ci)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  pr-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      BASE_URL: http://localhost:8085
+      TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
+      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3307"
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: novel_plus
+
+    steps:
+      # ── 1. Checkout automation repo ─────────────────────────────────────────
+      - name: Checkout automation repo
+        uses: actions/checkout@v4
+
+      # ── 2. Checkout backend repo into ./backend ──────────────────────────────
+      - name: Checkout backend repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.BACKEND_REPO }}
+          token: ${{ secrets.BACKEND_REPO_TOKEN }}
+          path: backend
+
+      # ── 3. Set up JDK 17 ────────────────────────────────────────────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      # ── 4. Build backend JAR ─────────────────────────────────────────────────
+      - name: Build backend
+        working-directory: backend
+        run: mvn -pl novel-front -am clean package -DskipTests
+
+      # ── 5. Start backend services (uses backend/docker-compose.yml) ──────────
+      - name: Start backend services
+        working-directory: backend
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_USER: ${{ secrets.DB_USER }}
+        run: docker compose up -d
+
+      # ── 6. Wait for backend API readiness ───────────────────────────────────
+      - name: Wait for API readiness
+        run: |
+          echo "Waiting for backend at $BASE_URL ..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8085/book/listClickRank > /dev/null 2>&1; then
+              echo "Backend is ready after ${i} attempts."
+              exit 0
+            fi
+            echo "Attempt $i/30 — not ready yet, sleeping 10s"
+            sleep 10
+          done
+          echo "ERROR: backend did not become ready in 300s"
+          docker compose -f backend/docker-compose.yml logs
+          exit 1
+
+      # ── 7. Set up Python 3.11 ────────────────────────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # ── 8. Install test dependencies ─────────────────────────────────────────
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ── 9a. Smoke tests ──────────────────────────────────────────────────────
+      - name: Smoke tests
+        run: pytest -q --tb=short tests/smoke --maxfail=1
+
+      # ── 9b. Contract tests ───────────────────────────────────────────────────
+      - name: Contract tests
+        run: pytest -q --tb=short tests/contract --maxfail=1
+
+      # ── 9c. CI Regression tests ──────────────────────────────────────────────
+      - name: CI Regression tests
+        run: |
+          pytest -q --tb=short tests/reg_ci --maxfail=1 \
+            --json-report --json-report-file=report.json
+
+      # ── 10. Show logs on failure ─────────────────────────────────────────────
+      - name: Show backend logs on failure
+        if: failure()
+        working-directory: backend
+        run: docker compose logs
+
+      # ── 11. Upload test report artifact ──────────────────────────────────────
+      - name: Upload test report
+        if: always() && hashFiles('report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report-${{ github.run_id }}
+          path: report.json
+          retention-days: 7
+
+      # ── 12. Teardown services ─────────────────────────────────────────────────
+      - name: Teardown services
+        if: always()
+        working-directory: backend
+        run: docker compose down -v
