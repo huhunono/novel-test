@@ -1,18 +1,20 @@
-# docker-compose.yml — local dev + CI backend stack
+# docker-compose.yml — local dev stack
+#
+# In CI, docker compose runs from the backend/ checkout directory instead.
+# This file is used for local development only.
 #
 # Usage:
 #   docker compose up -d --wait   # start all services and wait until healthy
 #   docker compose down -v         # teardown
-#
-# The novel-api image must be built or pulled before CI runs.
-# Set NOVEL_API_IMAGE in your environment or GitHub Actions secrets,
-# or replace the image value with the correct registry path.
 
 version: "3.9"
 
 services:
   novel-api:
-    image: ${NOVEL_API_IMAGE:-novel-api:latest}
+    # For local dev: set NOVEL_API_IMAGE to a pre-built image, or replace with
+    # a build: context pointing to your local backend source.
+    # Example: image: novel-api:latest  (after running: docker build -t novel-api:latest ../novel-backend)
+    image: ${NOVEL_API_IMAGE:?NOVEL_API_IMAGE must be set. Build with: docker build -t novel-api:latest <backend-path>}
     ports:
       - "8083:8083"
     environment:
@@ -36,6 +38,8 @@ services:
       MYSQL_DATABASE: novel_plus
     ports:
       - "3307:3306"
+    volumes:
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-test123456}"]
       interval: 10s
