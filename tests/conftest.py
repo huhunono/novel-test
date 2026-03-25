@@ -2,7 +2,15 @@ import logging
 
 
 
+
+
+
+
 import os
+
+
+
+
 
 
 
@@ -14,7 +22,19 @@ from typing import Dict, Generator, Optional, Sequence
 
 
 
+
+
+
+
+
+
+
+
 import pymysql
+
+
+
+
 
 
 
@@ -22,7 +42,15 @@ import pymysql.connections
 
 
 
+
+
+
+
 import pymysql.cursors
+
+
+
+
 
 
 
@@ -34,7 +62,19 @@ import pytest
 
 
 
+
+
+
+
+
+
+
+
 from clients.base_client import BaseClient
+
+
+
+
 
 
 
@@ -42,7 +82,15 @@ from clients.book_client import BookClient
 
 
 
+
+
+
+
 from clients.news_client import NewsClient
+
+
+
+
 
 
 
@@ -50,11 +98,27 @@ from clients.user_client import UserClient
 
 
 
+
+
+
+
 from tests.data.users import TEST_PASSWORD, TEST_USERNAME
 
 
 
+
+
+
+
 from tests.utils.db_helpers import db_one
+
+
+
+
+
+
+
+
 
 
 
@@ -74,7 +138,23 @@ logger = logging.getLogger(__name__)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 @pytest.fixture(scope="session")
+
+
+
+
 
 
 
@@ -82,7 +162,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
     client = BaseClient(base_url=base_url)
+
+
+
+
 
 
 
@@ -90,7 +178,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
         resp = client.post(
+
+
+
+
 
 
 
@@ -98,7 +194,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
             data={
+
+
+
+
 
 
 
@@ -106,7 +210,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
                 "password": TEST_PASSWORD,
+
+
+
+
 
 
 
@@ -114,11 +226,23 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
             allow_redirects=False,
 
 
 
+
+
+
+
         )
+
+
+
+
 
 
 
@@ -126,7 +250,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
             "LOGIN status=%s ct=%s body=%s",
+
+
+
+
 
 
 
@@ -134,7 +266,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
             resp.headers.get("Content-Type"),
+
+
+
+
 
 
 
@@ -142,7 +282,19 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
         )
+
+
+
+
+
+
+
+
 
 
 
@@ -154,11 +306,23 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
         if resp.status_code != 200:
 
 
 
+
+
+
+
             pytest.fail(
+
+
+
+
 
 
 
@@ -166,11 +330,23 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
                 f"body={resp.text[:300]}"
 
 
 
+
+
+
+
             )
+
+
+
+
 
 
 
@@ -178,7 +354,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
             pytest.fail(
+
+
+
+
 
 
 
@@ -186,7 +370,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
                 f"ct={ct}, status={resp.status_code}, body={resp.text[:200]}"
+
+
+
+
 
 
 
@@ -194,7 +386,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
         body = resp.json()
+
+
+
+
 
 
 
@@ -202,7 +402,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
             pytest.fail(f"[auth_token] Login ok!=True: {body}")
+
+
+
+
 
 
 
@@ -210,7 +418,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
         if not isinstance(token, str) or not token:
+
+
+
+
 
 
 
@@ -218,7 +434,15 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
         return token
+
+
+
+
 
 
 
@@ -226,7 +450,23 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
         client.close()
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -242,11 +482,31 @@ def auth_token(base_url: str) -> str:
 
 
 
+
+
+
+
 def base_url() -> str:
 
 
 
-    return os.getenv("BASE_URL", "http://127.0.0.1:8085")
+
+
+
+
+    return os.getenv("BASE_URL", "http://127.0.0.1:8083")
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -259,6 +519,10 @@ def base_url() -> str:
 
 
 @pytest.fixture()
+
+
+
+
 
 
 
@@ -266,7 +530,15 @@ def auth_http(auth_token: str, base_url: str) -> Generator[BaseClient, None, Non
 
 
 
+
+
+
+
     client = BaseClient(
+
+
+
+
 
 
 
@@ -274,7 +546,15 @@ def auth_http(auth_token: str, base_url: str) -> Generator[BaseClient, None, Non
 
 
 
+
+
+
+
         default_headers={"Authorization": auth_token},
+
+
+
+
 
 
 
@@ -282,7 +562,15 @@ def auth_http(auth_token: str, base_url: str) -> Generator[BaseClient, None, Non
 
 
 
+
+
+
+
     try:
+
+
+
+
 
 
 
@@ -290,7 +578,15 @@ def auth_http(auth_token: str, base_url: str) -> Generator[BaseClient, None, Non
 
 
 
+
+
+
+
     finally:
+
+
+
+
 
 
 
@@ -306,7 +602,23 @@ def auth_http(auth_token: str, base_url: str) -> Generator[BaseClient, None, Non
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 @pytest.fixture()
+
+
+
+
 
 
 
@@ -314,7 +626,15 @@ def plain_http(base_url: str) -> Generator[BaseClient, None, None]:
 
 
 
+
+
+
+
     client = BaseClient(base_url=base_url)
+
+
+
+
 
 
 
@@ -322,11 +642,23 @@ def plain_http(base_url: str) -> Generator[BaseClient, None, None]:
 
 
 
+
+
+
+
         yield client
 
 
 
+
+
+
+
     finally:
+
+
+
+
 
 
 
@@ -346,7 +678,27 @@ def plain_http(base_url: str) -> Generator[BaseClient, None, None]:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @pytest.fixture()
+
+
+
+
 
 
 
@@ -354,7 +706,15 @@ def news_client(plain_http: BaseClient) -> NewsClient:
 
 
 
+
+
+
+
     """NewsClient wrapping the plain HTTP client (no auth required for listIndexNews)."""
+
+
+
+
 
 
 
@@ -370,7 +730,23 @@ def news_client(plain_http: BaseClient) -> NewsClient:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 @pytest.fixture()
+
+
+
+
 
 
 
@@ -378,7 +754,15 @@ def book_client(plain_http: BaseClient) -> BookClient:
 
 
 
+
+
+
+
     """BookClient wrapping the plain HTTP client (no auth - read-only endpoints)."""
+
+
+
+
 
 
 
@@ -394,7 +778,23 @@ def book_client(plain_http: BaseClient) -> BookClient:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 @pytest.fixture()
+
+
+
+
 
 
 
@@ -402,7 +802,15 @@ def auth_book_client(auth_http: BaseClient) -> BookClient:
 
 
 
+
+
+
+
     """BookClient wrapping the authenticated HTTP client (write endpoints: addBookComment etc)."""
+
+
+
+
 
 
 
@@ -418,7 +826,23 @@ def auth_book_client(auth_http: BaseClient) -> BookClient:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 @pytest.fixture()
+
+
+
+
 
 
 
@@ -426,7 +850,15 @@ def user_client(auth_http: BaseClient) -> UserClient:
 
 
 
+
+
+
+
     """UserClient wrapping the authenticated HTTP client."""
+
+
+
+
 
 
 
@@ -442,11 +874,31 @@ def user_client(auth_http: BaseClient) -> UserClient:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 @pytest.fixture(scope="session")
 
 
 
+
+
+
+
 def test_user() -> Dict[str, str]:
+
+
+
+
 
 
 
@@ -462,7 +914,23 @@ def test_user() -> Dict[str, str]:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 @pytest.fixture(scope="session")
+
+
+
+
 
 
 
@@ -470,7 +938,15 @@ def db_conn() -> Generator[pymysql.connections.Connection, None, None]:
 
 
 
+
+
+
+
     conn = pymysql.connect(
+
+
+
+
 
 
 
@@ -478,7 +954,15 @@ def db_conn() -> Generator[pymysql.connections.Connection, None, None]:
 
 
 
+
+
+
+
         port=int(os.getenv("DB_PORT", "3307")),
+
+
+
+
 
 
 
@@ -486,7 +970,15 @@ def db_conn() -> Generator[pymysql.connections.Connection, None, None]:
 
 
 
+
+
+
+
         password=os.getenv("DB_PASSWORD", "test123456"),
+
+
+
+
 
 
 
@@ -494,7 +986,15 @@ def db_conn() -> Generator[pymysql.connections.Connection, None, None]:
 
 
 
+
+
+
+
         charset="utf8mb4",
+
+
+
+
 
 
 
@@ -502,7 +1002,15 @@ def db_conn() -> Generator[pymysql.connections.Connection, None, None]:
 
 
 
+
+
+
+
         cursorclass=pymysql.cursors.DictCursor,
+
+
+
+
 
 
 
@@ -510,7 +1018,15 @@ def db_conn() -> Generator[pymysql.connections.Connection, None, None]:
 
 
 
+
+
+
+
     try:
+
+
+
+
 
 
 
@@ -518,7 +1034,15 @@ def db_conn() -> Generator[pymysql.connections.Connection, None, None]:
 
 
 
+
+
+
+
     finally:
+
+
+
+
 
 
 
@@ -534,7 +1058,23 @@ def db_conn() -> Generator[pymysql.connections.Connection, None, None]:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 @pytest.fixture(scope="session")
+
+
+
+
 
 
 
@@ -542,7 +1082,15 @@ def test_user_id(
 
 
 
+
+
+
+
     db_conn: pymysql.connections.Connection,
+
+
+
+
 
 
 
@@ -550,7 +1098,15 @@ def test_user_id(
 
 
 
+
+
+
+
 ) -> int:
+
+
+
+
 
 
 
@@ -558,7 +1114,15 @@ def test_user_id(
 
 
 
+
+
+
+
     row = db_one(db_conn, "SELECT id FROM user WHERE username=%s", (username,))
+
+
+
+
 
 
 
@@ -566,7 +1130,15 @@ def test_user_id(
 
 
 
+
+
+
+
     return row["id"]
+
+
+
+
 
 
 
