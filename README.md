@@ -95,6 +95,18 @@ See [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md) for design decisions.
 Both workflows: checkout backend repo → Maven build → `docker compose up` →
 readiness check → pytest → artifact upload → `docker compose down -v`.
 
+### Test Results
+
+| Report | Link |
+|---|---|
+| **Latest Nightly Allure Report** | [📊 View Live Report](https://huhunono.github.io/novel-test/nightly/latest/) |
+| Nightly Full Regression runs | [GitHub Actions](https://github.com/huhunono/novel-test/actions/workflows/nightly.yml) |
+| PR Gate runs | [GitHub Actions](https://github.com/huhunono/novel-test/actions/workflows/pr-gate.yml) |
+
+> **How to view Allure reports:**
+> - **Online:** Click the "View Live Report" link above (latest nightly run)
+> - **Locally:** Download `allure-results-*` artifact from any run, then `allure serve allure-results/`
+
 ---
 
 ## Project Structure
