@@ -1,305 +1,155 @@
-# API Automation Test Project
+# Novel Platform — API Test Quality Platform
 
-This project implements a **layered API automation testing strategy**
-for a novel reading platform, focusing on **stability**, **contract integrity**,
-and **core business regression coverage**.
+A production-style API automation platform for a novel reading backend,
+built around layered testing, JSON Schema contract validation, and a
+full CI/CD pipeline (PR Gate + Nightly). Designed to reflect real-world
+SDET engineering practices, not just test coverage.
 
-The test suite is designed to reflect **real-world automation practices**
-used by QA / SDET teams, rather than exhaustive endpoint coverage.
-
----
-## Test Reporting (Allure)
-![Allure Report Overview](docs/images/allure1-30.png)
----
-
-## 1. Testing Goals
-
-- Verify core APIs are **reachable and stable**
-- Protect API **response contracts** from breaking changes
-- Detect **critical business regressions** across key user flows
-- Keep the suite **fast, reliable, and CI-friendly**
+![Allure Report](docs/images/allure1-30.png)
 
 ---
 
-## 2. Testing Layers Overview
+## Key Features
 
-| Layer      | Purpose                               | Characteristics |
-|-----------|---------------------------------------|----------------|
-| Smoke     | Service availability check            | Fast, read-only, minimal assertions |
-| Contract  | API response structure validation     | Schema-based, P0 endpoints only |
-| CI Regression | P0 business flow protection in CI        | Scenario-based, deterministic, state-safe |
-| Regression| Business behavior & state invariants  | Cross-API flows, negative paths, boundary conditions |
-
----
-
-# 3. Smoke Test Scope
-
-Smoke tests provide a **fast go / no-go signal** for the system by validating
-basic availability of **P0 user-facing APIs**.
-
-### Principles
-- **Fast & stable** (seconds-level execution)
-- **Deterministic** (no flaky or environment-sensitive behavior)
-- Prefer **read-only** APIs where possible
-- No complex business logic or cross-API dependencies
-
-### Included Smoke APIs
-
-- `GET /book/listBookCategory`
-- `GET /book/queryBookDetail/{bookId}`
-- `GET /book/queryIndexList?bookId=`
-- `GET /news/listIndexNews`
-- `GET /book/listRank`
-- `GET /book/searchByPage`
-- `POST /user/login`
-- `GET /user/userInfo`
-
-> Smoke tests verify **service reachability and basic response success**.  
-> They intentionally avoid schema enforcement, deep validation, or business rules.
+- **Layered test architecture** — smoke / contract / reg_ci / regression
+- **JSON Schema contract testing** — modular schema composition with `jsonschema`
+- **Domain client pattern** — `BookClient`, `UserClient`, `NewsClient` encapsulate all HTTP concerns
+- **Validation layer** — reusable `assert_json_response`, `assert_ok_true`, `validate_schema`
+- **Test data management** — static constants (`books.py`, `users.py`) + dynamic generators (`generators.py`)
+- **DB validation** — `pymysql` fixtures for state verification beyond HTTP responses
+- **CI/CD pipelines** — PR Gate (fast feedback) + Nightly (full regression)
+- **Observability** — Allure results artifact + pytest JSON report per run
+- **AI-assisted failure triage** *(planned — Phase 4)*
+- **UI validation layer** *(planned — Playwright smoke, Phase 5)*
 
 ---
 
-# 4. Contract Test Scope (Schema Validation)
+## Architecture
 
-Contract tests ensure that **API response structures remain backward compatible**
-for all consumers (UI, mobile, automation, downstream services).
+```
+┌─────────────────────────────────────────┐
+│              Test Layer                 │
+│  smoke / contract / reg_ci / regression │
+└───────────────────┬─────────────────────┘
+                    │ pytest fixtures (conftest.py)
+┌───────────────────▼─────────────────────┐
+│            Client Layer                 │
+│   BookClient / UserClient / NewsClient  │
+│         (domain-scoped HTTP)            │
+└───────────────────┬─────────────────────┘
+                    │ requests.Session
+┌───────────────────▼─────────────────────┐
+│           Validation Layer              │
+│  response_validator / schema_validator  │
+└───────────────────┬─────────────────────┘
+                    │
+┌───────────────────▼─────────────────────┐
+│            Backend API                  │
+│         Spring Boot + MySQL             │
+└─────────────────────────────────────────┘
 
-### Principles
-- Focus on **P0 externally consumed APIs**
-- Validate **response structure**, not business correctness
-- Prevent breaking changes that would cause parsing or rendering failures
+Supporting layers:
+  schemas/       — JSON Schema definitions (base + data + endpoints)
+  tests/data/    — static constants + dynamic generators
+  ai_assist/     — failure triage (planned)
+```
 
----
-
-## 4.1 Schema Modularization & Reuse (Key Architecture)
-
-To ensure **DRY (Don't Repeat Yourself)** principles and long-term maintainability,
-schemas are composed using reusable building blocks:
-
-- **`BASE_RESPONSE_SCHEMA`** (`base_response.py`)  
-  Defines the universal response envelope:
-  `code`, `ok`, `msg`, `data`
-
-- **`pagination_schema()`** (`common_pagination.py`)  
-  A higher-order schema wrapper for paginated responses, enforcing:
-  `pageNum`, `pageSize`, `total`, `list`, `pages`
-
-This approach enables **consistent contract enforcement** while minimizing duplication.
-
----
-
-## Covered Contract APIs
-
-- `GET /book/listBookCategory`
-- `GET /book/listRank`
-- `GET /book/queryBookDetail/{bookId}`
-- `GET /book/queryIndexList`
-- `GET /book/searchByPage`
-- `GET /news/listIndexNews`
-- `POST /user/login` (token schema)
-- `GET /user/userInfo`
-- `GET /user/listBookShelfByPage`
-- `GET /user/queryIsInShelf`
-
-These tests ensure:
-- Required fields exist
-- Field types remain compatible
-- Pagination contracts do not break consumers
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for full layer details.
 
 ---
 
-# 5. CI Regression Suite (PR Gate)
+## Test Strategy
 
-The **CI Regression suite** is a **minimal, deterministic subset of regression tests**
-executed on **every CI run (PR gate)**.
+| Layer | Trigger | Purpose |
+|---|---|---|
+| **Smoke** | PR Gate + Nightly | Fast go/no-go — service reachability |
+| **Contract** | PR Gate + Nightly | Schema validation — prevent breaking changes |
+| **reg_ci** | PR Gate + Nightly | P0 business flows — deterministic, state-safe |
+| **Regression** | Nightly only | Full business validation — cross-API flows, boundary, negative |
 
-### Goals
-- Validate **P0 business-critical paths**
-- Catch **high-impact regressions early**
-- Remain **fast, stable, and environment-safe**
+**PR Gate** runs `smoke + contract + reg_ci` on every push/PR.
+Fails fast with `--maxfail=1` to keep feedback loops short.
 
-### Explicitly Avoided
-- Large data setup
-- Non-deterministic dependencies
-- Full combinatorial coverage
+**Nightly** runs the full suite including `regression`.
+All steps use `continue-on-error` to collect complete Allure results
+even when individual suites have failures.
 
----
-
-## CI Regression Coverage
-
-This suite validates **core system health** and **critical user flows**:
-
-- **`test_book_category_ci`**  
-  Book category API availability and basic data sanity
-
-- **`test_book_detail_ci`**  
-  Book detail retrieval and identity consistency by `bookId`
-
-- **`test_book_index_list_ci`**  
-  Chapter index list accessibility and structural integrity
-
-- **`test_book_rank_ci`**  
-  Ranking list availability for discovery flows
-
-- **`test_index_news_ci`**  
-  Homepage news feed availability and display readiness
-
-- **`test_user_login_ci`**  
-  Authentication success and token usability
-
-- **`test_user_bookshelf_ci`**  
-  Minimal bookshelf lifecycle consistency  
-  *(Add → Query True → Remove → Query False)*
+See [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md) for design decisions.
 
 ---
 
-# 6. Regression Test Plan
+## CI/CD
 
-Regression tests validate **business correctness, state consistency, and failure handling**
-across API boundaries.
+### PR Gate (`.github/workflows/pr-gate.yml`)
+- **Trigger:** push or pull request → `main` / `develop`
+- **Runs:** smoke → contract → reg_ci
+- **Artifact:** `report.json`
+- **Goal:** quality gate before merge — fast, must-pass
 
-They intentionally prioritize **risk-based coverage** over exhaustive permutations.
+### Nightly (`.github/workflows/nightly.yml`)
+- **Trigger:** daily schedule (02:00 CST) + `workflow_dispatch`
+- **Runs:** smoke → contract → reg_ci → regression
+- **Artifact:** `allure-results/` + `report.json` (14-day retention)
+- **Goal:** full regression coverage + failure trend visibility
 
-### Design Techniques
-- **Scenario-based testing**
-- **Equivalence partitioning**
-- **Boundary value analysis**
-- **Error guessing** based on common production risks
-
----
-
-## 6.1 Happy Path  
-### Core Business Flows (Scenario-Based)
-
-### Authentication Flows
-- `login → userInfo`
-- `login → refreshToken → userInfo`
-
-**Invariant:**  
-Valid tokens must grant access to protected APIs; refreshed tokens must remain usable.
+Both workflows: checkout backend repo → Maven build → `docker compose up` →
+readiness check → pytest → artifact upload → `docker compose down -v`.
 
 ---
 
-### Bookshelf State Flow
-- `addToBookShelf`
-→ `queryIsInShelf == true`
-→ `listBookShelfByPage` contains book
-→ `removeFromBookShelf`
-→ `queryIsInShelf == false`
+## Project Structure
 
-**Invariant:**  
-Bookshelf state must remain consistent across all related APIs.
-
----
-
-### Bookshelf Idempotency Rule
-
-- `addToBookShelf` (first call)
-→ `addToBookShelf` (duplicate call)
-→ `listBookShelfByPage` contains the book **only once**
-
-**Invariant:**  
-Duplicate operations must not create duplicate state.
-
-Covered test:
-- `test_reg_addToBookShelf_idempotent_should_not_duplicate`
+```
+clients/          # Domain HTTP clients (BookClient, UserClient, NewsClient)
+validators/       # Reusable assertion and schema validation functions
+schemas/          # JSON Schema definitions (base / data / endpoints)
+tests/
+  smoke/          # Availability checks
+  contract/       # Schema contract tests
+  reg_ci/         # PR Gate regression subset
+  regression/     # Full business regression
+  data/           # Static constants + dynamic generators
+  utils/          # DB helpers, assertion shims
+ai_assist/        # Failure triage (planned)
+docs/             # Architecture, strategy, roadmap
+.github/
+  workflows/
+    pr-gate.yml
+    nightly.yml
+```
 
 ---
 
-### Bookshelf Cross-API Consistency (Known Issue)
-
-**Scenario:**
-- Add non-existent `bookId`
-- `queryIsInShelf == true`
-- `listBookShelfByPage` does not include the book
-
-**Invariant:**
-- `queryIsInShelf == true` ⇒ book must appear in list  
-  **OR**
-- Invalid `bookId` must be rejected at add time
-
-Covered test:
-- `test_reg_bookshelf_consistency_nonexistent_bookId_query_true_but_not_in_list` *(xfail)*
-
----
-
-### Book Data Consistency
-- `searchByPage → queryBookDetail(bookId)`
-- `queryBookDetail(bookId) → queryIndexList(bookId)`
-
-**Invariant:**  
-All endpoints must reference the same `bookId`.
-
----
-
-### Comment Flow
-- `addBookComment`
-- `listCommentByPage` contains the new comment
-
-**Invariant:**  
-Successfully submitted comments must be visible to users.
-
----
-
-## 6.2 Negative Path  
-### Validation, Boundary, and Security
-
-### A. Equivalence Partitioning
-
-**Endpoint:** `GET /book/queryBookDetail/{bookId}`
-
-- Valid & exists → covered by happy path
-- Valid but non-existent → safe JSON error, no 5xx
-- Invalid format (`-1`, `"abc"`) → validation failure, no 5xx
-
----
-
-### B. Boundary Value Analysis
-
-**Endpoint:** `GET /book/searchByPage`
-
-- `pageNum = 0` → rejected or normalized, no 5xx
-- `pageNum = 2` → valid; empty list acceptable
-- `pageSize = 1` → success; pagination metadata consistent
-
----
-
-### C. Error Guessing (Auth & Security)
-
-- Login with invalid password  
-  → authentication fails gracefully  
-  → no token returned  
-  → structured JSON response
-
----
-
-# 7. Out-of-Scope APIs
-
-The following APIs are intentionally excluded:
-
-- **Payment APIs (`/pay/*`)**
-  - External gateway dependency
-  - Asynchronous callbacks
-  - High flakiness risk
-
-- **Author / CMS APIs**
-  - Do not affect core reader flow
-  - High change frequency
-
----
-
-# 8. Known Issues & Observed Contract Deviations
-
-Observed behaviors are documented and explicitly marked with `pytest.xfail`
-to preserve intent while keeping CI stable.
-
-
----
-
-# 9. Test Execution
+## Getting Started
 
 ```bash
+# 1. Clone and configure environment
+git clone <repo>
+cp .env.example .env
+# Edit .env with your local backend URL and DB credentials
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Run tests
 pytest tests/smoke
 pytest tests/contract
-pytest tests/regression
 pytest tests/reg_ci
+pytest tests/regression
+```
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` for local development.
+In CI, all variables are injected via GitHub Actions secrets.
+
+Key variables: `BASE_URL`, `TEST_USERNAME`, `TEST_PASSWORD`,
+`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`.
+
+---
+
+## Roadmap
+
+See [`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md).
