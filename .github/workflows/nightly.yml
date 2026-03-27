@@ -138,6 +138,22 @@ jobs:
           path: report.json
           retention-days: 14
 
+      # ── 11c. Generate Allure HTML report ──────────────────────────────────────
+      - name: Generate Allure report
+        if: always() && hashFiles('allure-results/**') != ''
+        run: |
+          allure generate allure-results -o allure-report --clean
+          echo "Report generated at $(date -u +'%Y-%m-%d %H:%M:%S UTC')" > allure-report/timestamp.txt
+
+      # ── 11d. Deploy Allure report to GitHub Pages ─────────────────────────────
+      - name: Deploy Allure report to GitHub Pages
+        if: always() && hashFiles('allure-report/**') != ''
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./allure-report
+          destination_dir: nightly/${{ github.run_number }}
+
       # ── 12. Teardown services ─────────────────────────────────────────────────
       - name: Teardown services
         if: always()

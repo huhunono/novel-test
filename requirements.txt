@@ -13,6 +13,7 @@ PyMySQL==1.1.1
 
 # Test reporting
 allure-pytest==2.15.3
+allure-commandline==2.25.0
 
 # Environment config
 python-dotenv==1.1.1
