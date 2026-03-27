@@ -6,7 +6,7 @@ from tests.data.books import BOOK_ID_SHELF_FLOW
 pytestmark = pytest.mark.regression
 
 
-def test_reg_bookshelf_add_requires_auth(base_url: str, plain_http: BaseClient) -> None:
+def test_reg_bookshelf_add_requires_auth(plain_http: BaseClient) -> None:
     """
         Regression Test: Verify Authorization Enforcement for Bookshelf Operations.
 
@@ -19,7 +19,7 @@ def test_reg_bookshelf_add_requires_auth(base_url: str, plain_http: BaseClient) 
     """
     book_id: str = BOOK_ID_SHELF_FLOW
 
-    resp = plain_http.post(base_url + "/user/addToBookShelf", data={"bookId": book_id}, allow_redirects=False)
+    resp = plain_http.post("/user/addToBookShelf", data={"bookId": book_id}, allow_redirects=False)
     if resp.status_code in (401, 403):
         return
     ct = resp.headers.get("content-type", "")
