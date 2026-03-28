@@ -92,6 +92,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          npm install -g allure-commandline --save-dev
 
       # ── 9a. Smoke tests ──────────────────────────────────────────────────────
       # No --maxfail: nightly collects full results across all suites
