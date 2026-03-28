@@ -5,8 +5,6 @@ built around layered testing, JSON Schema contract validation, and a
 full CI/CD pipeline (PR Gate + Nightly). Designed to reflect real-world
 SDET engineering practices, not just test coverage.
 
-![Allure Report](docs/images/allure1-30.png)
-
 ---
 
 ## Key Features
@@ -99,13 +97,11 @@ readiness check → pytest → artifact upload → `docker compose down -v`.
 
 | Report | Link |
 |---|---|
-| **Latest Nightly Allure Report** | [📊 View Live Report](https://huhunono.github.io/novel-test/nightly/latest/) |
-| Nightly Full Regression runs | [GitHub Actions](https://github.com/huhunono/novel-test/actions/workflows/nightly.yml) |
-| PR Gate runs | [GitHub Actions](https://github.com/huhunono/novel-test/actions/workflows/pr-gate.yml) |
+| **Nightly Allure Report** | [📊 View Live Report](https://huhunono.github.io/novel-test/nightly/latest/) |
+| Nightly workflow runs | [GitHub Actions](https://github.com/huhunono/novel-test/actions/workflows/nightly.yml) |
+| PR Gate workflow runs | [GitHub Actions](https://github.com/huhunono/novel-test/actions/workflows/pr-gate.yml) |
 
-> **How to view Allure reports:**
-> - **Online:** Click the "View Live Report" link above (latest nightly run)
-> - **Locally:** Download `allure-results-*` artifact from any run, then `allure serve allure-results/`
+> Allure results are also available as downloadable artifacts on each nightly run (14-day retention).
 
 ---
 
