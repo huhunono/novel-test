@@ -28,20 +28,20 @@ SDET engineering practices, not just test coverage.
 ┌─────────────────────────────────────────┐
 │              Test Layer                 │
 │  smoke / contract / reg_ci / regression │
-└───────────────────┬─────────────────────┘
+└───────────────────┤┬───────────────────┘
                     │ pytest fixtures (conftest.py)
-┌───────────────────▼─────────────────────┐
+┌───────────────────┤│───────────────────┐
 │            Client Layer                 │
 │   BookClient / UserClient / NewsClient  │
 │         (domain-scoped HTTP)            │
-└───────────────────┬─────────────────────┘
+└───────────┤┬──────────────────────┘
                     │ requests.Session
-┌───────────────────▼─────────────────────┐
+┌───────────────────┤│───────────────────┐
 │           Validation Layer              │
 │  response_validator / schema_validator  │
-└───────────────────┬─────────────────────┘
+└───────────┤┬──────────────────────┘
                     │
-┌───────────────────▼─────────────────────┐
+┌───────────────────┤│───────────────────┐
 │            Backend API                  │
 │         Spring Boot + MySQL             │
 └─────────────────────────────────────────┘
@@ -97,11 +97,12 @@ readiness check → pytest → artifact upload → `docker compose down -v`.
 
 | Report | Link |
 |---|---|
-| **Nightly Allure Report** | [📊 View Live Report](https://huhunono.github.io/novel-test/nightly/latest/) |
-| Nightly workflow runs | [GitHub Actions](https://github.com/huhunono/novel-test/actions/workflows/nightly.yml) |
-| PR Gate workflow runs | [GitHub Actions](https://github.com/huhunono/novel-test/actions/workflows/pr-gate.yml) |
+| Nightly workflow runs + Allure artifacts | [GitHub Actions - Nightly](https://github.com/huhunono/novel-test/actions/workflows/nightly.yml) |
+| PR Gate workflow runs | [GitHub Actions - PR Gate](https://github.com/huhunono/novel-test/actions/workflows/pr-gate.yml) |
 
-> Allure results are also available as downloadable artifacts on each nightly run (14-day retention).
+> Allure results (`allure-results/`) are uploaded as downloadable artifacts on every nightly run (14-day retention).
+> To view locally: download the artifact, then run `allure serve allure-results/`.
+> HTML report publishing via GitHub Pages is a planned enhancement.
 
 ---
 
