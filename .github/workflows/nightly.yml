@@ -140,21 +140,42 @@ jobs:
           path: report.json
           retention-days: 14
 
-      # ── 11c. Generate Allure HTML report ──────────────────────────────────────
+      # ── 11c. Install Allure CLI ───────────────────────────────────────────────
+      - name: Install Allure CLI
+        if: always() && hashFiles('allure-results/**') != ''
+        run: |
+          curl -o allure.tgz -L https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
+          tar -zxf allure.tgz
+          sudo mv allure-2.27.0 /opt/allure
+          sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure
+          allure --version
+
+      # ── 11d. Generate Allure HTML report ──────────────────────────────────────
       - name: Generate Allure report
         if: always() && hashFiles('allure-results/**') != ''
         run: |
           allure generate allure-results -o allure-report --clean
           echo "Report generated at $(date -u +'%Y-%m-%d %H:%M:%S UTC')" > allure-report/timestamp.txt
 
-      # ── 11d. Deploy Allure report to GitHub Pages ─────────────────────────────
-      - name: Deploy Allure report to GitHub Pages
+      # ── 11e. Deploy Allure report to GitHub Pages ─────────────────────────────
+      # Deploys to two paths:
+      #   /nightly/<run_number>/  — permanent link for this run
+      #   /nightly/latest/        — stable URL always pointing to newest report
+      - name: Deploy to GitHub Pages (versioned)
         if: always() && hashFiles('allure-report/**') != ''
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report
           destination_dir: nightly/${{ github.run_number }}
+
+      - name: Deploy to GitHub Pages (latest)
+        if: always() && hashFiles('allure-report/**') != ''
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./allure-report
+          destination_dir: nightly/latest
 
       # ── 12. Teardown services ─────────────────────────────────────────────────
       - name: Teardown services
