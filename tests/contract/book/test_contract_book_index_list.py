@@ -1,9 +1,9 @@
 import pytest
-from jsonschema import validate
 
 from schemas.endpoints.book.query_index_response import QUERY_INDEX_LIST_RESPONSE_SCHEMA
 from tests.data.books import BOOK_ID_DETAIL
 from tests.utils.assertions import assert_json_response
+from validators.schema_validator import validate_schema
 
 pytestmark = pytest.mark.contract
 
@@ -20,5 +20,5 @@ def test_contract_query_index_list_schema(book_client):
         str(BOOK_ID_DETAIL), allow_redirects=False, timeout=10
     )
     body = assert_json_response(resp)
-    validate(instance=body, schema=QUERY_INDEX_LIST_RESPONSE_SCHEMA)
+    validate_schema(body, QUERY_INDEX_LIST_RESPONSE_SCHEMA, context="GET /book/queryIndexList")
     assert body["ok"] is True and body["code"] == 200

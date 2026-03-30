@@ -14,3 +14,4 @@ def test_index_news(news_client):
     body = assert_json_response(resp)
     assert body.get("ok") is True
     assert body.get("code") == 200
+    assert body.get("data") is not None, f"data is null: {body}"

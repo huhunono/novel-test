@@ -1,7 +1,8 @@
 import pytest
+
 from schemas.endpoints.user.list_book_shelf_response import BOOK_SHELF_RESPONSE_SCHEMA
-from jsonschema import validate
 from tests.utils.assertions import assert_json_response
+from validators.schema_validator import validate_schema
 
 pytestmark = pytest.mark.contract
 
@@ -16,5 +17,5 @@ def test_contract_book_shelf_response_schema(user_client):
     """
     resp = user_client.list_bookshelf_by_page(allow_redirects=False, timeout=10)
     body = assert_json_response(resp)
-    validate(instance=body,schema=BOOK_SHELF_RESPONSE_SCHEMA)
+    validate_schema(body, BOOK_SHELF_RESPONSE_SCHEMA, context="GET /user/listBookShelfByPage")
     assert body["ok"] is True and body["code"] == 200

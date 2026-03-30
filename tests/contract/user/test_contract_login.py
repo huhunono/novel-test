@@ -1,8 +1,8 @@
 import pytest
-from jsonschema import validate
 
 from schemas.endpoints.user.login_response import LOGIN_RESPONSE_DATA_SCHEMA
 from tests.utils.assertions import assert_json_response
+from validators.schema_validator import validate_schema
 
 pytestmark = pytest.mark.contract
 
@@ -18,6 +18,5 @@ def test_contract_login_response_schema(base_url, plain_http, test_user):
     """
     resp = plain_http.post(base_url + "/user/login", data=test_user, allow_redirects=False, timeout=10)
     body = assert_json_response(resp)
-    validate(instance=body, schema=LOGIN_RESPONSE_DATA_SCHEMA)
+    validate_schema(body, LOGIN_RESPONSE_DATA_SCHEMA, context="POST /user/login")
     assert body["ok"] is True and body["code"] == 200
-

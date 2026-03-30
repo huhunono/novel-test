@@ -27,5 +27,5 @@ BASE_RESPONSE_SCHEMA = {
             "description": "Simplified flag for quick success/failure check"
         }
     },
-    "additionalProperties": True
+    "additionalProperties": False
 }

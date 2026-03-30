@@ -17,8 +17,6 @@ def test_query_book_detail(book_client):
     resp = book_client.query_detail(str(BOOK_ID_DETAIL), allow_redirects=False, timeout=10)
     body = assert_json_response(resp)
 
-    # Assertion 3: Verify basic business success markers (Envelope Level)
     assert body.get("ok") is True
     assert body.get("code") == 200
-    #data = body.get("data")
-    #assert data is 
+    assert body.get("data") is not None, f"data is null: {body}"

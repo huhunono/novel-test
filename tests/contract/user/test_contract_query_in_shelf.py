@@ -1,9 +1,9 @@
 import pytest
-from jsonschema import validate
 
 from schemas.base.response import BASE_RESPONSE_SCHEMA
 from tests.data.books import BOOK_ID_DETAIL
 from tests.utils.assertions import assert_json_response
+from validators.schema_validator import validate_schema
 
 pytestmark = pytest.mark.contract
 
@@ -21,5 +21,5 @@ def test_contract_query_in_shelf_response_schema(user_client):
         str(BOOK_ID_DETAIL), allow_redirects=False, timeout=10
     )
     body = assert_json_response(resp)
-    validate(instance=body, schema=BASE_RESPONSE_SCHEMA)
+    validate_schema(body, BASE_RESPONSE_SCHEMA, context="GET /user/queryIsInShelf")
     assert body["ok"] is True and body["code"] == 200
