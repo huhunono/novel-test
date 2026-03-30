@@ -9,9 +9,15 @@ from .base_client import BaseClient
 
 class BookClient:
     """
-    Higher-level book-related API operations.
+    Domain client for book-related API operations.
 
-    Currently unused by tests but provided for future refactors.
+    Encapsulates all HTTP calls to /book/* endpoints behind
+    business-meaningful method signatures. Used by smoke, contract,
+    reg_ci, and regression test suites.
+
+    Note: search_by_page() uses 'curr' and 'limit' as query param names —
+    these are the actual names the Spring Boot controller binds,
+    not the Python method argument names (page_num / page_size).
     """
 
     def __init__(self, base_client: BaseClient) -> None:

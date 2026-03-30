@@ -9,9 +9,11 @@ from .base_client import BaseClient
 
 class UserClient:
     """
-    Higher-level user-related API operations.
+    Domain client for user-related API operations.
 
-    Currently unused by tests but provided for future refactors.
+    Encapsulates all HTTP calls to /user/* endpoints behind
+    business-meaningful method signatures. Used by smoke, contract,
+    reg_ci, and regression test suites.
     """
 
     def __init__(self, base_client: BaseClient) -> None:
