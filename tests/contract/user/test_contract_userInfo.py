@@ -1,7 +1,8 @@
-from jsonschema import validate
-from schemas.endpoints.user.userInfo_response import USERINFO_RESPONSE
 import pytest
+
+from schemas.endpoints.user.userInfo_response import USERINFO_RESPONSE
 from tests.utils.assertions import assert_json_response
+from validators.schema_validator import validate_schema
 
 pytestmark = pytest.mark.contract
 
@@ -17,7 +18,7 @@ def test_contract_userinfo_response_schema(user_client):
     """
     resp = user_client.user_info(allow_redirects=False, timeout=10)
     body = assert_json_response(resp)
-    validate(instance=body, schema=USERINFO_RESPONSE)
+    validate_schema(body, USERINFO_RESPONSE, context="GET /user/userInfo")
     assert body["ok"] is True and body["code"] == 200
 
 
@@ -39,5 +40,3 @@ def test_contract_userinfo_unauthorized_returns_failure(base_url, plain_http):
         body = assert_json_response(resp)
         assert body.get("ok") is False
         assert body.get("data") is None
-
-

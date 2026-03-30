@@ -1,9 +1,11 @@
-from jsonschema import validate
-from schemas.endpoints.book.list_rank_response import BOOK_RANK_ITEM_SCHEMA
 import pytest
+
+from schemas.endpoints.book.list_rank_response import BOOK_RANK_ITEM_SCHEMA
 from tests.utils.assertions import assert_json_response
+from validators.schema_validator import validate_schema
 
 pytestmark = pytest.mark.contract
+
 
 def test_contract_list_rank_schema(book_client):
     """
@@ -16,5 +18,5 @@ def test_contract_list_rank_schema(book_client):
     """
     resp = book_client.list_rank(type_=1, allow_redirects=False, timeout=10)
     body = assert_json_response(resp)
-    validate(instance=body, schema=BOOK_RANK_ITEM_SCHEMA)
+    validate_schema(body, BOOK_RANK_ITEM_SCHEMA, context="GET /book/listRank")
     assert body["ok"] is True and body["code"] == 200
