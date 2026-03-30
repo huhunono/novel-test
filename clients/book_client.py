@@ -24,9 +24,11 @@ class BookClient:
         extra_params: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
     ) -> requests.Response:
+        # Backend expects 'curr' for page number and 'limit' for page size.
+        # These are the actual query param names the Spring Boot controller binds.
         params: Dict[str, Any] = {
-            "pageNum": page_num,
-            "pageSize": page_size,
+            "curr": page_num,
+            "limit": page_size,
         }
         if extra_params:
             params.update(extra_params)
