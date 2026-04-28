@@ -13,7 +13,7 @@ jobs:
       contents: write  # required for peaceiris/actions-gh-pages to push gh-pages branch
 
     env:
-      BASE_URL: http://localhost:8083
+      BASE_URL: http://localhost:8085
       TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
       TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
       DB_HOST: 127.0.0.1
@@ -67,9 +67,8 @@ jobs:
           NOVEL_API_IMAGE: novel-api:latest
         run: |
           docker compose -f docker-compose.local.yml ps
-          docker compose -f docker-compose.local.yml logs app --tail=200
-          docker compose -f docker-compose.local.yml logs mysql --tail=100
-          docker compose -f docker-compose.local.yml logs redis --tail=50
+          docker compose -f docker-compose.local.yml logs novel-api --tail=200
+          docker compose -f docker-compose.local.yml logs db --tail=100
 
       # ── 6. Wait for backend API readiness ───────────────────────────────────
       - name: Wait for API readiness
@@ -78,7 +77,7 @@ jobs:
         run: |
           echo "Waiting for backend at $BASE_URL ..."
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:8083/book/listClickRank > /dev/null 2>&1; then
+            if curl -sf "$BASE_URL/book/listClickRank" > /dev/null 2>&1; then
               echo "Backend is ready after ${i} attempts."
               exit 0
             fi
