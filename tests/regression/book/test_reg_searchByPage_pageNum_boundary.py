@@ -1,17 +1,15 @@
 import pytest
 
-from clients.base_client import BaseClient
-
 pytestmark = pytest.mark.regression
 
 
 # ---------------------- BVA 1: pageNum = 0 ----------------------
 @pytest.mark.xfail(reason="Known issue: pageNum=0 accepted as valid")
-def test_reg_pageNum_zero_should_be_rejected_or_safely_handled(base_url: str, plain_http: BaseClient) -> None:
+def test_reg_pageNum_zero_should_be_rejected_or_safely_handled(book_client) -> None:
     """
         Regression Test: Verify Boundary Handling for Invalid Page Index (Zero).
 
-        Logic Flow: searchByPage?curr=0
+        Logic Flow: searchByPage?pageNum=0
 
         This test ensures the system handles out-of-bounds pagination gracefully:
         1. Robustness: Prevents 500 Internal Server Errors when the page index is 0.
@@ -19,10 +17,12 @@ def test_reg_pageNum_zero_should_be_rejected_or_safely_handled(base_url: str, pl
            Otherwise, it should return a business-level error (ok=false).
         3. Bug Detection: Catching cases where pageNum=0 is reflected back in the response, which is logically invalid.
     """
-    # BVA: intentionally passes raw string "0" (not int 0) to probe API input handling.
-    # Uses resp.json() directly (not assert_json_response) because non-200 responses are acceptable here.
-    params = {"curr": "0"}
-    resp = plain_http.get(base_url + "/book/searchByPage", params=params, allow_redirects=False, timeout=10)
+    resp = book_client.search_by_page(
+        page_num=0,
+        page_size=10,
+        allow_redirects=False,
+        timeout=10,
+    )
 
     assert resp.status_code < 500
 
@@ -41,21 +41,23 @@ def test_reg_pageNum_zero_should_be_rejected_or_safely_handled(base_url: str, pl
 
 
 # ---------------------- BVA 2: pageNum = 2 (Empty Page) ----------------------
-def test_reg_pageNum_two_should_return_empty_or_valid_result(base_url: str, plain_http: BaseClient) -> None:
+def test_reg_pageNum_two_should_return_empty_or_valid_result(book_client) -> None:
     """
         Regression Test: Verify Pagination Behavior on Valid Out-of-Range Requests.
 
-        Logic Flow: searchByPage?curr=2 (Assuming total data < 2 pages)
+        Logic Flow: searchByPage?pageNum=2 (Assuming total data < 2 pages)
 
         This test ensures the API follows standard pagination conventions:
         1. Consistency: A request for an empty page should still be a "success" (200 OK) but return an empty list.
         2. Metadata Integrity: Verifies that even if the list is empty, the response structure and page metadata remain intact.
         3. Data Type Safety: Ensures 'list' field is an empty list [] rather than null or missing.
      """
-    # BVA: intentionally passes raw string "2" to test empty-page behavior.
-    # Uses resp.json() directly — this test expects a 200 with empty list, not an error.
-    params = {"curr": "2"}
-    resp = plain_http.get(base_url + "/book/searchByPage", params=params, allow_redirects=False, timeout=10)
+    resp = book_client.search_by_page(
+        page_num=2,
+        page_size=10,
+        allow_redirects=False,
+        timeout=10,
+    )
 
     assert resp.status_code < 500
     body = resp.json()

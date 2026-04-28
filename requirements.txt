@@ -1,5 +1,5 @@
 # Core test runner
-pytest==9.0.2
+pytest==8.2.2
 pytest-timeout==2.3.1
 
 # HTTP client
@@ -19,3 +19,7 @@ python-dotenv==1.1.1
 
 # JSON report output (for AI triage integration in Phase 2)
 pytest-json-report==1.5.0
+
+# UI testing
+playwright==1.51.0
+pytest-playwright==0.7.0

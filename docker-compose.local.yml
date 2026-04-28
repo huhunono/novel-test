@@ -14,11 +14,12 @@ services:
     # For local dev: set NOVEL_API_IMAGE to a pre-built image, or replace with
     # a build: context pointing to your local backend source.
     # Example: image: novel-api:latest  (after running: docker build -t novel-api:latest ../novel-backend)
-    image: ${NOVEL_API_IMAGE:?NOVEL_API_IMAGE must be set. Build with: docker build -t novel-api:latest <backend-path>}
+    image: "${NOVEL_API_IMAGE:?NOVEL_API_IMAGE must be set. Build with: docker build -t novel-api:latest <backend-path>}"
     ports:
       - "8085:8085"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/novel_plus?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
       - SPRING_DATASOURCE_USERNAME=${DB_USER:-root}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-test123456}
     depends_on:
@@ -39,7 +40,7 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./backend/docker/mysql/init/seed.sql:/docker-entrypoint-initdb.d/01_seed.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-test123456}"]
       interval: 10s

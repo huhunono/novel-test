@@ -39,7 +39,7 @@ def test_reg_login_token_can_call_userinfo(user_client: UserClient) -> None:
 
 
 # ---------- missing login token ---------------
-def test_reg_userinfo_requires_auth(plain_http, base_url) -> None:
+def test_reg_userinfo_requires_auth(plain_http) -> None:
     """
         Regression Test: Verify Access Control for Protected Resources.
 
@@ -51,8 +51,10 @@ def test_reg_userinfo_requires_auth(plain_http, base_url) -> None:
         3. Security Contract: Confirms that the 'data' field remains null, protecting user privacy.
 
         Note: plain_http is intentionally used here — this test validates the unauthenticated path.
+        UserClient wraps plain_http so URL construction stays in the client layer.
     """
-    resp = plain_http.get(base_url + "/user/userInfo", allow_redirects=False, timeout=20)
+    from clients.user_client import UserClient
+    resp = UserClient(plain_http).user_info(allow_redirects=False, timeout=20)
 
     assert resp.status_code in (200, 401, 403)
 

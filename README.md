@@ -9,16 +9,16 @@ SDET engineering practices, not just test coverage.
 
 ## Key Features
 
-- **Layered test architecture** — smoke / contract / reg_ci / regression
+- **Layered test architecture** — smoke / contract / reg_ci / regression / UI
 - **JSON Schema contract testing** — modular schema composition with `jsonschema`
 - **Domain client pattern** — `BookClient`, `UserClient`, `NewsClient` encapsulate all HTTP concerns
 - **Validation layer** — reusable `assert_json_response`, `assert_ok_true`, `validate_schema`
 - **Test data management** — static constants (`books.py`, `users.py`) + dynamic generators (`generators.py`)
 - **DB validation** — `pymysql` fixtures for state verification beyond HTTP responses
-- **CI/CD pipelines** — PR Gate (fast feedback) + Nightly (full regression)
+- **UI end-to-end testing** — Playwright-based smoke tests with Page Object + Flow pattern
+- **CI/CD pipelines** — PR Gate (fast feedback) + Nightly (full regression + UI)
 - **Observability** — Allure results artifact + pytest JSON report per run
 - **AI-assisted failure triage** *(planned — Phase 4)*
-- **UI validation layer** *(planned — Playwright smoke, Phase 5)*
 
 ---
 
@@ -28,6 +28,7 @@ SDET engineering practices, not just test coverage.
 ┌─────────────────────────────────────────┐
 │              Test Layer                 │
 │  smoke / contract / reg_ci / regression │
+│            + UI (Playwright)            │
 └───────────────────┬─────────────────────┘
                     │ pytest fixtures (conftest.py)
 ┌───────────────────▼─────────────────────┐
@@ -64,6 +65,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for full layer details.
 | **Contract** | PR Gate + Nightly | Schema validation — prevent breaking changes |
 | **reg_ci** | PR Gate + Nightly | P0 business flows — deterministic, state-safe |
 | **Regression** | Nightly only | Full business validation — cross-API flows, boundary, negative |
+| **UI** | Nightly only | Playwright end-to-end smoke — login, search, shelf, chapter |
 
 **PR Gate** runs `smoke + contract + reg_ci` on every push/PR.
 Fails fast with `--maxfail=1` to keep feedback loops short.
@@ -86,9 +88,9 @@ See [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md) for design decisions.
 
 ### Nightly (`.github/workflows/nightly.yml`)
 - **Trigger:** daily schedule (02:00 CST) + `workflow_dispatch`
-- **Runs:** smoke → contract → reg_ci → regression
+- **Runs:** smoke → contract → reg_ci → regression → UI
 - **Artifact:** `allure-results/` + `report.json` (14-day retention)
-- **Goal:** full regression coverage + failure trend visibility
+- **Goal:** full regression coverage + UI validation + failure trend visibility
 
 Both workflows: checkout backend repo → Maven build → `docker compose up` →
 readiness check → pytest → artifact upload → `docker compose down -v`.
@@ -116,6 +118,7 @@ tests/
   contract/       # Schema contract tests
   reg_ci/         # PR Gate regression subset
   regression/     # Full business regression
+  ui/             # Playwright end-to-end tests (Page Object + Flow pattern)
   data/           # Static constants + dynamic generators
   utils/          # DB helpers, assertion shims
 ai_assist/        # Failure triage (planned)
@@ -144,6 +147,10 @@ pytest tests/smoke
 pytest tests/contract
 pytest tests/reg_ci
 pytest tests/regression
+
+# 4. Run UI tests (requires Playwright browsers)
+playwright install chromium
+pytest -m ui tests/ui
 ```
 
 ---
