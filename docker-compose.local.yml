@@ -19,6 +19,7 @@ services:
       - "8085:8085"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/novel_plus?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
       - SPRING_DATASOURCE_USERNAME=${DB_USER:-root}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-test123456}
     depends_on:
