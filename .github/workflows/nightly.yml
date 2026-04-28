@@ -58,7 +58,9 @@ jobs:
           NOVEL_API_IMAGE: novel-api:latest
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_USER: ${{ secrets.DB_USER }}
-        run: docker compose -f docker-compose.local.yml up -d --wait
+        run: |
+          ls -l ./backend/docker/mysql/init/seed.sql
+          docker compose -f docker-compose.local.yml up -d --wait
 
       # ── 5.1 Debug backend startup logs ───────────────────────────────────────
       - name: Debug backend logs
