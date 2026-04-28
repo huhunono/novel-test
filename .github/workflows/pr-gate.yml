@@ -105,6 +105,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # ── 8.1 Debug CI API routes before pytest ────────────────────────────────
+      - name: Debug CI API routes before pytest
+        run: |
+          curl -i http://localhost:8083/news/listIndexNews || true
+          curl -i http://localhost:8083/book/listClickRank || true
+
       # ── 9a. Smoke tests ──────────────────────────────────────────────────────
       - name: Smoke tests
         run: pytest -q --tb=short tests/smoke --maxfail=1

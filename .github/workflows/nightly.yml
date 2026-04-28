@@ -110,6 +110,12 @@ jobs:
       - name: Install Playwright browsers
         run: playwright install --with-deps chromium
 
+      # ── 8.2 Debug CI API routes before pytest ────────────────────────────────
+      - name: Debug CI API routes before pytest
+        run: |
+          curl -i http://localhost:8083/news/listIndexNews || true
+          curl -i http://localhost:8083/book/listClickRank || true
+
       # ── 9a. Smoke tests ──────────────────────────────────────────────────────
       # No --maxfail: nightly collects full results across all suites
       - name: Smoke tests
