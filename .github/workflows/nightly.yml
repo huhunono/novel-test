@@ -95,6 +95,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # ── 8.1 Install Playwright browsers (for UI tests) ──────────────────────
+      - name: Install Playwright browsers
+        run: playwright install --with-deps chromium
+
       # ── 9a. Smoke tests ──────────────────────────────────────────────────────
       # No --maxfail: nightly collects full results across all suites
       - name: Smoke tests
@@ -114,6 +118,13 @@ jobs:
       # ── 9d. Full Regression tests (nightly only) ─────────────────────────────
       - name: Full Regression tests
         run: pytest -q --tb=short tests/regression --alluredir=allure-results --json-report --json-report-file=report.json
+        continue-on-error: true
+
+      # ── 9e. UI smoke tests (Playwright, headless) ────────────────────────────
+      - name: UI smoke tests
+        env:
+          HEADLESS: "true"
+        run: pytest -q --tb=short -m ui tests/ui --alluredir=allure-results
         continue-on-error: true
 
       # ── 10. Show logs on failure ─────────────────────────────────────────────

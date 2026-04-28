@@ -6,8 +6,10 @@ TEST_PASSWORD as GitHub Actions secrets.
 """
 import os
 
-# Phone number used as username for the primary test account.
 TEST_USERNAME: str = os.getenv("TEST_USERNAME", "13560421999")
-
-# Password for the primary test account.
 TEST_PASSWORD: str = os.getenv("TEST_PASSWORD", "123456")
+
+VALID_USER: dict = {
+    "username": TEST_USERNAME,
+    "password": TEST_PASSWORD,
+}

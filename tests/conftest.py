@@ -6,6 +6,7 @@ import pymysql
 import pymysql.connections
 import pymysql.cursors
 import pytest
+from playwright.sync_api import Page, sync_playwright
 
 from clients.base_client import BaseClient
 from clients.book_client import BookClient
@@ -140,3 +141,13 @@ def test_user_id(
     row = db_one(db_conn, "SELECT id FROM user WHERE username=%s", (username,))
     assert row and "id" in row, f"user not found in DB: username={username}"
     return row["id"]
+
+
+@pytest.fixture()
+def browser_page() -> Generator[Page, None, None]:
+    headless = os.getenv("HEADLESS", "false").lower() == "true"
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=headless)
+        page = browser.new_page()
+        yield page
+        browser.close()
