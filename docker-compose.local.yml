@@ -14,7 +14,7 @@ services:
     # For local dev: set NOVEL_API_IMAGE to a pre-built image, or replace with
     # a build: context pointing to your local backend source.
     # Example: image: novel-api:latest  (after running: docker build -t novel-api:latest ../novel-backend)
-    image: ${NOVEL_API_IMAGE:?NOVEL_API_IMAGE must be set. Build with: docker build -t novel-api:latest <backend-path>}
+    image: "${NOVEL_API_IMAGE:?NOVEL_API_IMAGE must be set. Build with: docker build -t novel-api:latest <backend-path>}"
     ports:
       - "8085:8085"
     environment:
