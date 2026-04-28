@@ -68,8 +68,11 @@ jobs:
           NOVEL_API_IMAGE: novel-api:latest
         run: |
           docker compose -f docker-compose.local.yml ps
-          docker compose -f docker-compose.local.yml logs novel-api --tail=1000
-          docker compose -f docker-compose.local.yml logs db --tail=200
+          docker compose -f docker-compose.local.yml ps -a
+          docker inspect novel-test-novel-api-1 --format='ExitCode={{.State.ExitCode}} Error={{.State.Error}} OOMKilled={{.State.OOMKilled}} FinishedAt={{.State.FinishedAt}}'
+          docker inspect novel-test-novel-api-1 --format='Image={{.Config.Image}} Cmd={{.Config.Cmd}} Entrypoint={{.Config.Entrypoint}}'
+          docker compose -f docker-compose.local.yml logs --no-color --timestamps novel-api
+          docker compose -f docker-compose.local.yml logs --no-color --timestamps db --tail=300
 
       # ── 6. Wait for backend API readiness ───────────────────────────────────
       - name: Wait for API readiness
