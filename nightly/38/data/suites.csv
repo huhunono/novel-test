@@ -1,0 +1,409 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","6","tests.regression.user","test_reg_bookshelf_security","","","","test_reg_bookshelf_add_requires_auth","
+        Regression Test: Verify Authorization Enforcement for Bookshelf Operations.
+
+        Scenario: Anonymous user (no token) attempts to add a book to the shelf.
+
+        This test ensures security boundaries are intact:
+        1. Unauthorized requests should be blocked at the transport (401/403) or business layer.
+        2. The system must not allow state changes for unauthenticated sessions.
+        3. The response must clearly indicate a failure (ok: False) or a non-success code.
+    "
+"passed","Tue Apr 28 19:17:08 UTC 2026","Tue Apr 28 19:17:08 UTC 2026","262","tests.smoke.book","test_smoke_search","","","","test_search_by_page","
+        Smoke Test: Verify the Book Search & Pagination API.
+
+        This test validates the core search functionality which involves keyword matching
+        and database pagination logic. It ensures users can find content via the
+        global search bar.
+    "
+"passed","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","80","tests.regression.user","test_reg_bookshelf_add_remove_flow","","","","test_reg_bookshelf_add_remove_flow","
+        Regression Test: End-to-End Bookshelf Lifecycle & Pagination Integrity.
+
+        Logic Flow: Pre-clean -> Add -> State Verify -> Pagination Search -> Remove -> Post-verify.
+
+        Checks:
+        1) Idempotency & Setup: Ensures a clean starting state via proactive pre-deletion.
+        2) State Flip: Validates 'queryIsInShelf' accurately reflects the book's presence.
+        3) Pagination Discovery: Confirms that newly added books are correctly indexed in the
+           paginated list API ('listBookShelfByPage').
+        4) Environment Neutrality: Guarantees post-test cleanup via defensive try/finally.
+    "
+"skipped","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","227","tests.regression.book","test_reg_queryBookDetail_negative","","","","test_reg_queryBookDetail_nonexistent_bookId_should_fail","
+
+        Regression Test: Verify System Graceful Failure for Non-existent Resources.
+
+        Logic Flow: queryBookDetail/{nonExistentId} (e.g., 999999999999)
+
+    "
+"passed","Tue Apr 28 19:17:12 UTC 2026","Tue Apr 28 19:17:12 UTC 2026","8","tests.regression.user","test_reg_login_invalid","","","","test_reg_login_invalid_password_should_fail","
+        CI Regression Test: Handle Login with invalid credentials.
+
+        Logic Flow: /user/login (POST) with incorrect password
+
+        Checks:
+        1) Service Resilience: Confirms the server does not crash (HTTP < 500) on invalid input.
+        2) Error Handling: Validates that 'ok' is false and the business 'code' is not 200.
+        3) Security: Ensures that incorrect passwords do not grant access to the system.
+
+    "
+"passed","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","15","tests.regression.book","test_reg_searchByPage_pageSize_boundary","","","","test_reg_searchByPage_pageSize_one_should_return_at_most_one_item","
+        Regression Test: Verify Pagination Boundary for Minimal Page Size.
+
+        Logic Flow: searchByPage?limit=1
+
+        This test ensures the backend respects the limit constraint at its lowest boundary:
+        1. Limit Enforcement: Validates that the persistence layer (SQL LIMIT 1) correctly restricts the result set.
+        2. Data Integrity: Verifies the 'pageSize' metadata in the response matches the requested parameter.
+        3. Resource Optimization: Ensures the API does not over-fetch data, protecting downstream consumers from bulk payloads.
+    "
+"passed","Tue Apr 28 19:17:10 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","15","tests.contract.user","test_contract_userInfo","","","","test_contract_userinfo_response_schema","
+        Test Case: Verify User Information Retrieval Contract.
+
+        Validation Logic:
+        1. HTTP transport level (Status code 200 and JSON content-type).
+        2. Global response format (ok=True, code=200).
+        3. Full JSON Schema validation for user profile metadata (matches USERINFO_RESPONSE).
+    "
+"passed","Tue Apr 28 19:17:12 UTC 2026","Tue Apr 28 19:17:12 UTC 2026","9","tests.regression.user","test_reg_login_invalid","","","","test_reg_login_empty_password_should_fail","
+        Regression Test: Login with empty password must be rejected.
+
+        Moved from tests/contract/ — this is a business-behavior negative test,
+        not a schema/contract test.
+    "
+"passed","Tue Apr 28 19:17:08 UTC 2026","Tue Apr 28 19:17:08 UTC 2026","30","tests.smoke.book","test_smoke_book_detail","","","","test_query_book_detail","
+        Smoke Test: Verify core availability of the Book Detail endpoint.
+
+        This test ensures that a known valid book ID returns a successful
+        response with the correct JSON structure. It serves as a health check
+        for the primary business path.
+    "
+"passed","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","51","tests.regression.book","test_reg_detail_indexlist_consistency","","","","test_reg_detail_to_indexlist_bookid_consistent","
+        Regression Test: Verify Foreign Key Integrity between Book Details and Chapter Index.
+
+        Logic Flow: searchByPage → queryBookDetail → queryIndexList
+
+        This test ensures the hierarchical data integrity:
+        1. Dynamic Linking: Confirms that a valid book discovered via search has a retrievable detail page.
+        2. Relational Consistency: Validates that every chapter/index entry returned by 'queryIndexList'
+           belongs strictly to the requested 'bookId'.
+        3. Child-Parent Mapping: Guarantees that the backend correctly filters content based on the parent ID.
+
+    "
+"passed","Tue Apr 28 19:17:10 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","17","tests.contract.user","test_contract_login","","","","test_contract_login_response_schema","
+        Test Case: Verify User Login Success Contract.
+
+        Validation Logic:
+        1. Global response format (ok=True, code=200).
+        2. Authentication token presence and format in 'data' field.
+        3. User profile metadata structure (matches LOGIN_RESPONSE_DATA_SCHEMA).
+    "
+"skipped","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:12 UTC 2026","386","tests.regression.user","test_reg_comment_flow","","","","test_reg_comment_add_then_visible_in_list","
+        Regression Test: Verify Comment Write-Read Consistency.
+
+        Logic Flow: searchByPage → addBookComment → listCommentByPage
+
+        This test ensures the comment system's write-read path is consistent:
+        1. Dynamic Book Discovery: Uses a real book ID from search to avoid hardcoded dependencies.
+        2. Write Verification: Confirms the comment submission endpoint accepts valid input.
+        3. Read Consistency: Validates the newly added comment appears in the paginated list.
+    "
+"passed","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","18","tests.regression.book","test_reg_searchByPage_pageNum_boundary","","","","test_reg_pageNum_two_should_return_empty_or_valid_result","
+        Regression Test: Verify Pagination Behavior on Valid Out-of-Range Requests.
+
+        Logic Flow: searchByPage?curr=2 (Assuming total data < 2 pages)
+
+        This test ensures the API follows standard pagination conventions:
+        1. Consistency: A request for an empty page should still be a ""success"" (200 OK) but return an empty list.
+        2. Metadata Integrity: Verifies that even if the list is empty, the response structure and page metadata remain intact.
+        3. Data Type Safety: Ensures 'list' field is an empty list [] rather than null or missing.
+     "
+"skipped","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","54","tests.regression.user","test_reg_bookshelf_consistency","","","","test_reg_bookshelf_consistency_nonexistent_bookId_query_true_but_not_in_list","
+        Regression Test: Verify Cross-API Data Consistency for Non-existent Book Resources.
+
+        Logic Flow: addToBookShelf(nonexistent_id) → queryIsInShelf → listBookShelfByPage
+
+        This test ensures that the bookshelf state is consistent across different query methods:
+        1. Input Validation: Detects if the system erroneously allows non-existent book IDs to be added.
+        2. State Synchronization: Verifies that if an API claims a book ""is in shelf"", it must actually appear in the shelf list.
+        3. Contract Integrity: Identifies hidden inconsistencies where the write-path (add) and read-paths (query vs. list) disagree.
+    "
+"passed","Tue Apr 28 19:17:08 UTC 2026","Tue Apr 28 19:17:08 UTC 2026","24","tests.smoke.book","test_smoke_list_rank","","","","test_list_rank","
+        Smoke Test: Verify the Book Ranking List API.
+
+        This test checks the system's ability to retrieve ranking data
+        (e.g., 1 for Top Clicked, 2 forTop New Books) which is essential for the homepage.
+
+    "
+"passed","Tue Apr 28 19:17:10 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","5","tests.reg_ci.news","test_index_news_ci","","","","test_reg_ci_list_index_news_basic","
+        CI Regression Test: Verify Homepage News List Integrity.
+
+        Logic Flow: /news/listIndexNews (GET)
+
+        Checks:
+        1) Content Delivery: Confirms the endpoint returns a valid 200 OK and a non-empty news list.
+        2) Metadata Identity: Ensures each news item contains a unique 'id' for routing/detail access.
+        3) Display Readiness: Validates that 'title' is a non-empty string to prevent UI layout collapse.
+
+    "
+"passed","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","24","tests.regression.book","test_reg_search_detail_consistency","","","","test_reg_search_to_detail_key_fields_consistent","
+        Regression Test: Verify Data Consistency between Search Index and Book Details.
+
+        Logic Flow: searchByPage → pick first book → queryBookDetail/{id}
+
+        This test ensures synchronization between disparate data sources:
+        1. Dynamic Discovery: Fetches real-time data from the search engine.
+        2. Deep Link Validation: Verifies that the ID retrieved from search points to a valid detail page.
+        3. Field Integrity: Ensures core metadata (Book Name, Author) matches exactly across different endpoints.
+    "
+"passed","Tue Apr 28 19:17:08 UTC 2026","Tue Apr 28 19:17:08 UTC 2026","166","tests.smoke.book","test_smoke_book_index_list","","","","test_query_index_list","
+        Smoke Test: Verify the Book Table of Contents (Index) API.
+
+        Validates that the system can retrieve the chapter list for a specific book.
+        This is a critical path for the reading experience; if this fails,
+        users cannot access book content.
+    "
+"passed","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","3","tests.regression.user","test_reg_auth_flow","","","","test_reg_userinfo_requires_auth","
+        Regression Test: Verify Access Control for Protected Resources.
+
+        Logic Flow: GET /user/userInfo (without Authorization header)
+
+        This test ensures that sensitive user data is shielded by the authentication gateway:
+        1. Authorization Enforcement: Validates that the system denies access when the token is missing.
+        2. Failure Consistency: Ensures the API returns a controlled failure (401/403 or ok=false with code 1001) instead of leaking data.
+        3. Security Contract: Confirms that the 'data' field remains null, protecting user privacy.
+
+        Note: plain_http is intentionally used here — this test validates the unauthenticated path.
+    "
+"passed","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","25","tests.regression.user","test_reg_auth_flow","","","","test_reg_refresh_issues_new_token_and_old_token_still_works","
+        Regression Test: Verify Token Refresh Logic and Overlap Grace Period.
+
+        Logic Flow: refreshToken → Get New Token → Test Old Token → Test New Token
+
+        This test ensures a smooth user experience during token rotation:
+        1. Refresh Integrity: Confirms the /refreshToken endpoint successfully issues a valid new string token.
+        2. Grace Period / Idempotency: Verifies if the old token remains valid for a short window after refresh
+           (prevents race conditions in high-concurrency mobile apps).
+        3. State Transition: Ensures the new token is immediately functional and provides access to user information.
+
+        Note: BaseClient is instantiated directly here because this test needs to dynamically swap
+        the Authorization header mid-test (old token → new token). A pre-built fixture cannot
+        model this runtime token rotation, so manual client management is intentional and correct.
+    "
+"skipped","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","13","tests.regression.book","test_reg_searchByPage_pageNum_boundary","","","","test_reg_pageNum_zero_should_be_rejected_or_safely_handled","
+        Regression Test: Verify Boundary Handling for Invalid Page Index (Zero).
+
+        Logic Flow: searchByPage?curr=0
+
+        This test ensures the system handles out-of-bounds pagination gracefully:
+        1. Robustness: Prevents 500 Internal Server Errors when the page index is 0.
+        2. Auto-correction vs. Rejection: If the API returns 200, it MUST correct the pageNum to 1.
+           Otherwise, it should return a business-level error (ok=false).
+        3. Bug Detection: Catching cases where pageNum=0 is reflected back in the response, which is logically invalid.
+    "
+"passed","Tue Apr 28 19:17:09 UTC 2026","Tue Apr 28 19:17:09 UTC 2026","35","tests.smoke.user","test_smoke_userinfo","","","","test_userinfo","
+        Smoke Test: Verify retrieval of user profile with valid credentials.
+
+        This test ensures that the Authorization header is correctly processed
+        and the backend returns the personal profile data for the logged-in user.
+    "
+"passed","Tue Apr 28 19:17:09 UTC 2026","Tue Apr 28 19:17:09 UTC 2026","34","tests.contract.book","test_contract_book_index_list","","","","test_contract_query_index_list_schema","
+        Test Case: Verify Book Chapter Index Pagination & Contract.
+
+        Validation Logic:
+        Ensures that for a given book, the system correctly returns a paginated list
+        of chapters (TOC). This is critical for the reader's navigation flow.
+    "
+"passed","Tue Apr 28 19:17:09 UTC 2026","Tue Apr 28 19:17:09 UTC 2026","27","tests.contract.book","test_contract_search","","","","test_contract_search_by_page_schema","
+        Test Case: Verify Book Search Pagination Contract.
+
+        Validation Logic:
+        1. Global response format (standard wrapper).
+        2. Pagination metadata (pageNum, pageSize, total, etc.).
+        3. Business entity data within the list (BOOK_ITEM_SCHEMA).
+    "
+"passed","Tue Apr 28 19:17:08 UTC 2026","Tue Apr 28 19:17:08 UTC 2026","16","tests.smoke.book","test_smoke_book_category","","","","test_list_book_category_smoke","
+        Smoke Test: Verify the Book Category Lookup API.
+
+        This interface provides the fundamental category list (e.g., Fantasy, Romance)
+        used across the entire site. Failure here typically impacts navigation and search.
+    "
+"passed","Tue Apr 28 19:17:09 UTC 2026","Tue Apr 28 19:17:09 UTC 2026","23","tests.contract.book","test_contract_list_rank","","","","test_contract_list_rank_schema","
+        Test Case: Verify Book Ranking List Contract.
+
+        Validation Logic:
+        1. HTTP transport level (Status code 200, JSON content-type, and explicitly no redirects).
+        2. Global response format (ok=True, code=200).
+        3. Book ranking list structure and item metadata consistency (matches BOOK_RANK_ITEM_SCHEMA).
+    "
+"passed","Tue Apr 28 19:17:10 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","13","tests.reg_ci.book","test_book_index_list_ci","","","","test_query_index_list_basic","
+        CI Regression Test: queryIndexList basic sanity for PR gate.
+
+        Logic Flow: queryIndexList?bookId={bookId} (GET)
+
+        Checks:
+        1) Service Availability: Confirms the chapter index service is reachable and returns 200 OK.
+        2) Response Structure: Validates 'data' object contains a 'list' of chapter entries.
+        3) Content Integrity: Ensures chapters exist (len > 0) and each has a valid 'id' and 'indexName'.
+
+    "
+"passed","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","38","tests.regression.user","test_reg_addToBookShelf_idempotent","","","","test_reg_addToBookShelf_idempotent_should_not_duplicate","
+        Regression Test: Verify API Idempotency for Add-to-Bookshelf Operations.
+
+        Logic Flow: addToBookShelf (First Call) → addToBookShelf (Duplicate Call) → DB Verification
+
+        This test ensures state consistency and prevents redundant data entry:
+        1. Idempotency Validation: Ensures identical requests do not create duplicate records.
+        2. Business Logic Integrity: Verifies the backend handles ""already exists"" scenario gracefully.
+        3. Collection Accuracy: Confirms the book count in the shelf remains <= 1, preventing UI display bugs.
+    "
+"passed","Tue Apr 28 19:17:08 UTC 2026","Tue Apr 28 19:17:08 UTC 2026","20","tests.smoke.news","test_smoke_news_index","","","","test_index_news","
+        Smoke Test: Verify the Index News API is reachable and returns a valid response.
+
+        This test ensures that the core news service is functional without performing
+        deep data validation.
+    "
+"passed","Tue Apr 28 19:17:10 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","9","tests.reg_ci.user","test_user_login_ci","","","","test_reg_ci_login_and_token_usable","
+        CI Regression Test: Authentication Flow and Token Usability.
+
+        Logic Flow: login (via session fixture) -> /user/userInfo (GET)
+
+        Checks:
+        1) Authentication: Verifies that valid credentials yield a usable token (handled by auth_token fixture).
+        2) Identity Persistence: Validates that the 'userInfo' retrieved via the token
+           correctly matches the logged-in user.
+
+        Note: This test uses user_client fixture (auth already injected) instead of
+        manually mutating plain_http headers, which would pollute fixture state
+        for other tests in the same session.
+    "
+"passed","Tue Apr 28 19:17:09 UTC 2026","Tue Apr 28 19:17:09 UTC 2026","16","tests.contract.book","test_contract_book_category","","","","test_contract_book_category_schema","
+        Test Case: Verify Book Category List Contract.
+
+        Validation Logic:
+        1. HTTP transport level (Status code 200 and JSON content-type).
+        2. Global response format (ok=True, code=200).
+        3. Category tree or list structure consistency (matches BOOK_CATEGORY_RESPONSE_SCHEMA).
+    "
+"passed","Tue Apr 28 19:17:09 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","124","tests.contract.user","test_contract_list_book_shelf","","","","test_contract_book_shelf_response_schema","
+        Test Case: Verify User Bookshelf Paginated List Contract.
+
+        Validation Logic:
+        1. HTTP transport level (Status code 200 and JSON content-type).
+        2. Global response format (ok=True, code=200).
+        3. Paginated data structure and book item metadata (matches BOOK_SHELF_RESPONSE_SCHEMA).
+    "
+"passed","Tue Apr 28 19:17:10 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","10","tests.reg_ci.book","test_book_rank_ci","","","","test_list_rank_type_1_basic","
+        CI Regression Test: listRank (Type 1) basic sanity for PR gate.
+
+        Logic Flow: listRank?type=1 (GET)
+
+        Checks:
+        1) Application success: ok=true and HTTP-level JSON integrity.
+        2) Data shape: 'data' returns a list containing multiple ranking entries (len > 1).
+        3) Minimal item sanity: Each entry must link to a category (catId) and specific ID,
+           with a valid 'bookName' string for display.
+
+    "
+"passed","Tue Apr 28 19:17:10 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","21","tests.contract.user","test_contract_query_in_shelf","","","","test_contract_query_in_shelf_response_schema","
+        Test Case: Verify Book In-Shelf Status Contract.
+
+        Validation Logic:
+        1. HTTP transport level (Status code 200 and JSON content-type).
+        2. Global response format (matches BASE_RESPONSE_SCHEMA).
+        3. Presence of 'data' field and confirmation of Boolean status (True).
+    "
+"passed","Tue Apr 28 19:17:10 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","132","tests.reg_ci.user","test_user_bookshelf_ci","","","","test_reg_ci_bookshelf_minimal_flow","
+        CI Regression Test: Bookshelf lifecycle state machine.
+
+        Logic Flow: Add -> Verify (True) -> Remove -> Verify (False)
+
+        Checks:
+        1) State Persistence: Verifies the backend correctly tracks book-to-user mapping.
+        2) Boolean Consistency: Confirms 'isInShelf' flips precisely according to user actions.
+        3) Resilient Cleanup: Uses try-finally to ensure environment neutrality
+           post-execution, regardless of test outcome.
+
+        Note: Uses user_client fixture (auth already injected) instead of
+        manually mutating plain_http headers, which would pollute fixture state.
+    "
+"passed","Tue Apr 28 19:17:10 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","8","tests.reg_ci.book","test_book_detail_ci","","","","test_query_book_detail_basic","
+        CI Regression Test: queryBookDetail basic sanity for PR gate.
+
+        Logic Flow: queryBookDetail/{bookId} (GET)
+
+        Checks:
+        1) Data Fetching: Confirms the endpoint retrieves a specific book's metadata by ID.
+        2) Identity Integrity: Verifies that the 'id' in the response matches the requested 'book_id'.
+        3) Content Reliability: Ensures 'bookName' is a valid, non-empty string for frontend display.
+    "
+"skipped","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","11","tests.regression.book","test_reg_queryBookDetail_negative","","","","test_reg_queryBookDetail_invalid_bookId_should_be_rejected[-1]","
+
+        Regression Test: Verify Input Validation and Rejection for Malformed Data.
+
+        Logic Flow: queryBookDetail/{invalid_id} (Parametrized with -1, ""abc"")
+
+    "
+"passed","Tue Apr 28 19:17:10 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","11","tests.reg_ci.book","test_book_category_ci","","","","test_reg_ci_list_book_category_min_contract","
+        CI Regression Test: listBookCategory basic sanity for PR gate.
+
+        Logic Flow: listBookCategory (GET)
+
+        Checks:
+        1) Application success: ok=true and code=200
+        2) Data shape: 'data' is a non-empty list
+        3) Minimal item sanity: first item has 'id' and non-empty 'name'
+    "
+"passed","Tue Apr 28 19:17:10 UTC 2026","Tue Apr 28 19:17:10 UTC 2026","4","tests.contract.user","test_contract_userInfo","","","","test_contract_userinfo_unauthorized_returns_failure","
+        Contract Test: Verify unauthenticated access to /user/userInfo is denied.
+
+        Security boundary contract:
+        - HTTP status must be 200, 401, or 403 (never 500)
+        - If 200: ok=False, data=None (business-layer rejection)
+
+        Moved from smoke/user — this is a behavioral contract check, not a
+        liveness check. Smoke tests verify the service is up; contract tests
+        verify the API enforces its authorization boundary.
+    "
+"passed","Tue Apr 28 19:17:09 UTC 2026","Tue Apr 28 19:17:09 UTC 2026","10","tests.contract.news","test_contract_news_index","","","","test_contract_list_index_news_schema",""
+"passed","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","17","tests.regression.user","test_reg_auth_refresh_flow","","","","test_reg_login_refresh_userinfo","
+        Regression Test: Verify Authentication Persistence during Token Refresh.
+
+        Logic Flow: login → refreshToken → userInfo
+
+        This test ensures the continuity of the user session:
+        1. The refreshToken endpoint successfully issues a valid new credential.
+        2. The session context correctly updates headers with the rotated token.
+        3. The subsequent userInfo call validates that the new token grants
+           uninterrupted access to protected resources.
+    "
+"passed","Tue Apr 28 19:17:09 UTC 2026","Tue Apr 28 19:17:09 UTC 2026","26","tests.contract.book","test_contract_book_detail","","","","test_contract_query_index_list_schema","
+        Test Case: Verify Book Detail API Contract.
+
+        Validation Logic:
+        Check if the system returns correct metadata (author, category, description)
+        for a specific book ID. This ensures the frontend info-page has all required data.
+        "
+"passed","Tue Apr 28 19:17:08 UTC 2026","Tue Apr 28 19:17:09 UTC 2026","266","tests.smoke.user","test_smoke_login","","","","test_login_success","
+        Smoke Test: Verify Successful Authentication.
+
+        This test ensures that the login credentials provided in the configuration
+        are valid and the 'auth_http' fixture can successfully establish a session.
+        It is a prerequisite for all subsequent authenticated API calls.
+    "
+"passed","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","10","tests.regression.user","test_reg_auth_flow","","","","test_reg_login_token_can_call_userinfo","
+        Regression Test: Verify User Info retrieval using a valid Login Token.
+
+        login → userInfo
+
+        This test ensures the end-to-end authentication flow:
+        1. Authorization headers are correctly propagated via user_client.
+        2. The backend correctly identifies the user session.
+        3. The profile data structure remains consistent for UI consumption.
+    "
+"skipped","Tue Apr 28 19:17:11 UTC 2026","Tue Apr 28 19:17:11 UTC 2026","8","tests.regression.book","test_reg_queryBookDetail_negative","","","","test_reg_queryBookDetail_invalid_bookId_should_be_rejected[abc]","
+
+        Regression Test: Verify Input Validation and Rejection for Malformed Data.
+
+        Logic Flow: queryBookDetail/{invalid_id} (Parametrized with -1, ""abc"")
+
+    "
