@@ -51,33 +51,30 @@ jobs:
       - name: Build backend Docker image
         run: docker build -t novel-api:latest ./backend/novel-front/target/build
 
-      # ── 5. Start backend services (uses repo-root docker-compose.local.yml) ─
+      # ── 5. Start backend services (uses backend/docker-compose.yml) ──────────
       - name: Start backend services
+        working-directory: backend
         env:
-          NOVEL_API_IMAGE: novel-api:latest
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_USER: ${{ secrets.DB_USER }}
         run: |
-          ls -l ./backend/docker/mysql/init/seed.sql
-          docker compose -f docker-compose.local.yml up -d --wait
+          ls -l ./docker/mysql/init/seed.sql
+          docker compose up -d
 
       # ── 5.1 Debug backend startup logs ───────────────────────────────────────
       - name: Debug backend logs
         if: always()
-        env:
-          NOVEL_API_IMAGE: novel-api:latest
+        working-directory: backend
         run: |
-          docker compose -f docker-compose.local.yml ps
-          docker compose -f docker-compose.local.yml ps -a
-          docker inspect novel-test-novel-api-1 --format='ExitCode={{.State.ExitCode}} Error={{.State.Error}} OOMKilled={{.State.OOMKilled}} FinishedAt={{.State.FinishedAt}}'
-          docker inspect novel-test-novel-api-1 --format='Image={{.Config.Image}} Cmd={{.Config.Cmd}} Entrypoint={{.Config.Entrypoint}}'
-          docker compose -f docker-compose.local.yml logs --no-color --timestamps novel-api
-          docker compose -f docker-compose.local.yml logs --no-color --timestamps db --tail=300
+          docker compose ps
+          docker compose ps -a
+          docker compose logs --no-color --timestamps app --tail=300
+          docker compose logs --no-color --timestamps mysql --tail=300
+          docker compose logs --no-color --timestamps redis --tail=100
 
       # ── 6. Wait for backend API readiness ───────────────────────────────────
       - name: Wait for API readiness
-        env:
-          NOVEL_API_IMAGE: novel-api:latest
+        working-directory: backend
         run: |
           echo "Waiting for backend at $BASE_URL ..."
           for i in $(seq 1 30); do
@@ -89,7 +86,7 @@ jobs:
             sleep 10
           done
           echo "ERROR: backend did not become ready in 300s"
-          docker compose -f docker-compose.local.yml logs
+          docker compose logs
           exit 1
 
       # ── 7. Set up Python 3.11 ────────────────────────────────────────────────
@@ -126,9 +123,8 @@ jobs:
       # ── 10. Show logs on failure ─────────────────────────────────────────────
       - name: Show backend logs on failure
         if: failure()
-        env:
-          NOVEL_API_IMAGE: novel-api:latest
-        run: docker compose -f docker-compose.local.yml logs
+        working-directory: backend
+        run: docker compose logs
 
       # ── 11. Upload test report artifact ──────────────────────────────────────
       - name: Upload test report
@@ -142,6 +138,5 @@ jobs:
       # ── 12. Teardown services ─────────────────────────────────────────────────
       - name: Teardown services
         if: always()
-        env:
-          NOVEL_API_IMAGE: novel-api:latest
-        run: docker compose -f docker-compose.local.yml down -v
+        working-directory: backend
+        run: docker compose down -v
