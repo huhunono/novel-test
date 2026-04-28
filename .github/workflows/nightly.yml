@@ -13,7 +13,7 @@ jobs:
       contents: write  # required for peaceiris/actions-gh-pages to push gh-pages branch
 
     env:
-      BASE_URL: http://localhost:8085
+      BASE_URL: http://localhost:8083
       TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
       TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
       DB_HOST: 127.0.0.1
