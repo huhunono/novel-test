@@ -1,0 +1,5 @@
+NEWS_DEBUG BASE_URL= http://localhost:8083
+NEWS_DEBUG resp.url= http://localhost:8083/news/listIndexNews
+NEWS_DEBUG status_code= 200
+NEWS_DEBUG content-type= application/json
+NEWS_DEBUG body[:300]= {"code":200,"msg":"SUCCESS","data":[{"id":"2","catId":3,"catName":"资讯","sourceName":null,"title":"AI小说悄然流行：人类特有的创作力，已经被AI复制？","readCount":null,"createTime":"2020-04-28T07:44:07.000+00:00","createUserId":null,"updateTime":null,"updateUserId":null,"content":null},{"id":"1","catId":1,"catName":"行业","so
