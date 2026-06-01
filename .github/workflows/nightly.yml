@@ -161,7 +161,33 @@ jobs:
           path: reports/*.json
           retention-days: 14
 
-      # ── 11c. Install Allure CLI ───────────────────────────────────────────────
+      # ── 11c. Generate failure triage summary ──────────────────────────────────
+      - name: Generate failure triage summary
+        if: always() && hashFiles('reports/*.json') != ''
+        run: |
+          python tools/triage/failure_triage.py \
+            --reports reports/*.json \
+            --output triage-summary.md
+          echo "Triage summary generated successfully"
+
+      # ── 11d. Upload triage summary ────────────────────────────────────────────
+      - name: Upload triage summary
+        if: always() && hashFiles('triage-summary.md') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: triage-summary-${{ github.run_id }}
+          path: triage-summary.md
+          retention-days: 14
+
+      # ── 11e. Post triage summary to GitHub Actions UI ────────────────────────
+      - name: Post triage summary to GitHub Actions UI
+        if: always() && hashFiles('triage-summary.md') != ''
+        run: |
+          echo "## AI Failure Triage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat triage-summary.md >> $GITHUB_STEP_SUMMARY
+
+      # ── 11f. Install Allure CLI ───────────────────────────────────────────────
       - name: Install Allure CLI
         if: always() && hashFiles('allure-results/**') != ''
         run: |
