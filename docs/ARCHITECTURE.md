@@ -154,16 +154,22 @@ with CI/CD pipelines as first-class citizens rather than an afterthought.
 
 ---
 
-### AI Assist Layer *(planned)*
-`ai_assist/` — not yet implemented
+### AI Assist Layer
+`tools/triage/`
 
-**Planned purpose:** Analyze `report.json` from nightly runs to surface failure patterns,
+**Purpose:** Analyze `report.json` from nightly runs to surface failure patterns,
 classify failures by type, and generate triage summaries.
 
-**Planned responsibilities:**
-- Parse `pytest-json-report` output
-- Classify failures (infra / data / contract / regression)
-- Generate human-readable triage report
+**Responsibilities:**
+- `failure_triage.py` — parse `pytest-json-report` output from all test suites
+- Dual-layer classification: status (Known Issue / New Failure) + root cause (8 categories)
+- Rule-based classification with confidence scoring
+- Generate human-readable Markdown triage report
+- Post summary to GitHub Actions UI via `$GITHUB_STEP_SUMMARY`
+
+**Does not own:** test execution, schema definitions, historical trend storage
+
+See `docs/AI_FAILURE_TRIAGE.md` for detailed design and classification logic.
 
 ---
 
@@ -259,11 +265,15 @@ This split prevents flaky regression tests from blocking PRs.
 | PR Gate workflow | ✅ Complete |
 | Nightly workflow + Allure artifact | ✅ Complete |
 
+### Implemented (continued)
+
+| Layer | Status |
+|---|---|
+| AI Assist — dual-layer failure triage (`tools/triage/failure_triage.py`) | ✅ Complete |
+| Nightly CI triage integration + GitHub Actions Summary | ✅ Complete |
+
 ### Planned
 
 | Layer | Status | Phase |
 |---|---|---|
-| AI Assist — failure triage (`analyze_failures.py`) | 🔲 Planned | Phase 4 |
 | UI Validation — Playwright smoke | 🔲 Optional | Phase 5 |
-| `docs/TEST_STRATEGY.md` | 🔲 Planned | Phase 3 |
-| `docs/PROJECT_ROADMAP.md` | 🔲 Planned | Phase 3 |

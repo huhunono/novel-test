@@ -57,17 +57,21 @@ Capture design decisions and improve result visibility.
 ---
 
 ## Phase 4 — AI-Assisted Failure Triage
-**Status: Planned**
+**Status: Complete (rule-based) / Optional (LLM extension)**
 
 Reduce manual triage time by automatically classifying and summarizing CI failures.
 
-- [ ] `ai_assist/analyze_failures.py` — parse `report.json`, classify failures by type
-- [ ] Failure categories: infra / data / contract / regression
-- [ ] Summary output: human-readable triage report per nightly run
-- [ ] `requirements-ai.txt` with AI-specific dependencies
-- [ ] Optional: post triage summary as GitHub Actions step summary
+- [x] `tools/triage/failure_triage.py` — parse all `reports/*.json`, classify failures by type
+- [x] Dual-layer classification: status (Known Issue / New Failure) + root cause (8 categories)
+- [x] Rule-based classifier with confidence scoring (High / Medium / Low)
+- [x] Summary output: `triage-summary.md` — human-readable triage report per nightly run
+- [x] CI integration: triage step runs after all pytest suites in `nightly.yml`
+- [x] Artifact upload: `triage-summary-<run_id>` retained for 14 days
+- [x] GitHub Actions Summary: results posted to `$GITHUB_STEP_SUMMARY` (zero-click visibility)
+- [x] `docs/AI_FAILURE_TRIAGE.md` — architecture, classification logic, data flow, limitations
+- [ ] LLM-assisted classification for `Unknown` failures — optional future extension
 
-This phase depends on Phase 3 reporting being stable.
+No additional requirements file needed — triage script uses Python standard library only.
 
 ---
 
